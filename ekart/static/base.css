@@ -1,0 +1,193 @@
+/* General Styles */
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f8f9fa;
+    margin: 0;
+    padding: 0;
+}
+
+.header, .footer {
+    background-color: #343a40; /* Same for header and footer */
+    color: white;
+    text-align: center;
+}
+
+.header img, .footer img {
+    margin-right: 10px;
+}
+
+.header ul, .footer ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.header ul li, .footer ul li {
+    display: inline;
+    margin: 0 10px;
+}
+
+.header ul li a, .footer ul li a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.header ul li a:hover, .footer ul li a:hover {
+    color: #ffcc00; /* Hover color */
+}
+
+/* Navbar */
+.navbar {
+    background-color: #f8f9fa;
+}
+
+.navbar-brand img {
+    margin-right: 10px;
+}
+
+.nav-link {
+    color: #343a40;
+}
+
+.nav-link:hover {
+    color: #28a745; /* Hover color for navbar links */
+}
+
+/* Items */
+.card {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease-in-out;
+    border: none;
+}
+
+.card:hover {
+    transform: scale(1.05);
+}
+
+.card-body h5 {
+    font-size: 18px;
+    color: #343a40;
+}
+
+.card-body .card-text a {
+    color: #6c757d;
+    text-decoration: none;
+}
+
+.card-body .card-text a:hover {
+    color: #28a745; /* Hover color for card links */
+}
+
+.price {
+    font-size: 20px;
+    color: #28a745;
+    font-weight: bold;
+}
+
+/* Pagination */
+.pagination {
+    justify-content: center;
+}
+
+.page-item .page-link {
+    color: #28a745;
+    border-radius: 5px;
+}
+
+.page-item.active .page-link,
+.page-item .page-link:hover {
+    background-color: #28a745;
+    color: white;
+}
+
+/* Footer */
+footer.bottom {
+    background-color: #343a40;
+    color: white;
+    text-align: center;
+    padding: 20px;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+}
+
+footer.bottom h5 {
+    margin: 5px 0;
+    font-size: 16px;
+}
+
+/* Additional Styles */
+.container {
+    margin-top: 20px;
+}
+
+/* Form Styles */
+.form-group label {
+    font-weight: bold;
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    border: none;
+}
+
+.btn-warning:hover {
+    background-color: #e0a800; /* Darker shade on hover */
+}
+
+/* Card Image */
+.card-img-top {
+    max-height: 200px;
+    object-fit: cover; /* Maintain aspect ratio */
+}
+
+/* Image */
+.image {
+    margin-top: 70px;
+}
+
+/* Box Section */
+.box {
+    font-size: 20px;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+}
+
+/* Add to Cart Button */
+.btn1 {
+    padding: 8px 40px;
+    border-radius: 18px;
+    background-color: orange;
+    color: white;
+    border-color: transparent;
+}
+.btn1:hover {
+    transform: scale(1.1);
+}
+
+/* Related Products */
+.items {
+    background-color: white;
+    color: black;
+    flex-wrap: wrap;
+    display: flex;
+    flex-direction: row;
+}
+.item1 {
+    border-radius: 5px;
+    border: 1px solid black;
+    padding: 5px;
+    margin: 5px;
+}
+.item1 img {
+    height: 200px;
+    width: 200px;
+    margin: auto;
+    border: 1px solid black;
+}
+.item1 h4, .item1 p, .item1 h6 {
+    text-align: center;
+}
+.item1 a:hover {
+    color: brown;
+}

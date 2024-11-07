@@ -1,0 +1,48 @@
+<!-- templates/login.html -->
+{% extends "base.html" %}
+{% block title %}Login{% endblock title %}
+
+{% block content %}
+<div class="container-fluid" style="margin-top:-50px;">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-4"> <!-- Reduced form block size -->
+            <div class="card p-4 shadow-sm">
+                <h3 class="text-center mb-4">Login</h3>
+
+                <!-- Form Section -->
+                <form method="post" class="row g-3 mt-2" id="loginForm">
+                    {% csrf_token %}
+
+                    <!-- Email Field -->
+                    <div class="col-12">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control {% if form.email.errors %}is-invalid{% endif %}" id="email" name="email" required>
+                    </div>
+
+                    <!-- Password Field -->
+                    <div class="col-12">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control {% if form.password.errors %}is-invalid{% endif %}" id="password" name="password" required>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="col-12 d-flex gap-2 justify-content-center mt-4">
+                        <button type="submit" class="btn btn-primary col-5">Login</button>
+                    </div>
+                </form>
+
+                <!-- Forgot Password Link -->
+                <div class="text-center mt-3">
+                    <a href="{% url 'forgot_password' %}" class="btn btn-link">Forgot Password?</a>
+                </div>
+
+                <!-- Sign Up Link -->
+                <div class="text-center mt-4">
+                    <a href="{% url 'signup' %}" class="btn btn-link">Don't have an account? Sign Up</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

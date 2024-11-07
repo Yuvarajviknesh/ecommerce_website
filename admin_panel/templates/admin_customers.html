@@ -1,0 +1,51 @@
+{% extends "basetemplate.html" %}
+
+{% block content %}
+<div class="container-fluid" style="margin-top: 20px;">
+    <h1 class="mb-4">Customer Management</h1>
+
+    <!-- Customer Table -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Registered Customers</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Username</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Date Joined</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in customers %}
+                    <tr>
+                        <th scope="row">{{ forloop.counter }}</th>
+                        <td>{{ customer.username }}</td>
+                        <td>{{ customer.email }}</td>
+                        <td>{{ customer.date_joined }}</td>
+                        <td>
+                            <a href="" class="btn btn-info btn-sm">View</a>
+                            <a href="" class="btn btn-warning btn-sm">Edit</a>
+                            <a href="" class="btn btn-danger btn-sm">Delete</a>
+                        </td> 
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">No customers found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add Customer Button -->
+    <div class="mt-3">
+        <a href="" class="btn btn-primary">Add New Customer</a>
+    </div> 
+</div>
+{% endblock %}

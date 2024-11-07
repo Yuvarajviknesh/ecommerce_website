@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Online Shop: SignUp{% endblock title %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-start" style="margin-top: -50px;">
+    <div class="card p-4 shadow-sm" style="width: 100%; max-width: 400px;">
+        <h3 class="text-center mb-4">SignUp</h3>
+
+        <!-- Form Section -->
+        <form method="post" class="row g-3 mt-3" id="signupForm">
+            {% csrf_token %}
+            
+            <!-- Email Field -->
+            <div class="col-12">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control {% if form.email.errors %}is-invalid{% endif %}" id="email" name="email" required>
+            </div>
+
+            <!-- Password Field -->
+            <div class="col-12">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control {% if form.password.errors %}is-invalid{% endif %}" id="password" name="password" required>
+            </div>
+
+            <!-- Confirm Password Field -->
+            <div class="col-12">
+                <label for="confirm_password" class="form-label">Confirm Password</label>
+                <input type="password" class="form-control {% if form.confirm_password.errors %}is-invalid{% endif %}" id="confirm_password" name="confirm_password" required>
+            </div>
+
+            <!-- Submit and Reset Buttons -->
+            <div class="col-12 d-flex gap-2 justify-content-center mt-4">
+                <button type="submit" class="btn btn-primary col-5">Submit</button>
+                <button type="reset" class="btn btn-danger col-5">Clear</button>
+            </div>
+        </form>
+
+        <!-- Login Link -->
+        <div class="text-center mt-4">
+            <a href="{% url 'login' %}" class="btn btn-link">Already have an account? Login</a>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Error Messages -->
+<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="errorModalLabel">Error</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="errorMessage"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Check for error messages and display modal
+    document.addEventListener('DOMContentLoaded', function() {
+        {% if messages %}
+            var errorMessage = "";
+            {% for message in messages %}
+                errorMessage += "{{ message }}<br>";
+            {% endfor %}
+            document.getElementById('errorMessage').innerHTML = errorMessage;
+            var modal = new bootstrap.Modal(document.getElementById('errorModal'));
+            modal.show();
+        {% endif %}
+    });
+</script>
+{% endblock %}

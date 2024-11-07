@@ -1,0 +1,32 @@
+{% extends "basetemplate.html" %}
+{% block title %}Products{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="dashboard-header">
+        <h1>Products</h1>
+        <p class="text-muted">Manage your products here</p>
+    </div>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Product Name</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Category</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Loop over products from context -->
+            {% for product in products %}
+            <tr>
+                <td>{{ product.title }}</td>
+                <td>₹{{ product.price }}</td>
+                <td>{{ product.stock_quantity }}</td>
+                <td>{{ product.category.name }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

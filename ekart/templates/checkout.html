@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Checkout{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <h2>Checkout</h2>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product ID</th>
+                <th>Order_ID</th>
+                <th>Image</th>
+                <th>Product Name</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if cart_items %}
+                {% for item in cart_items %}
+                <tr>
+                    <td>{{ item.product.id }}</td>
+                    <td>{{order_id}}</td>
+                    <td><img src="{{ item.product.image.url }}" alt="{{ item.product.title }}" width="100" height="100"></td> <!-- Display Product Image -->
+                    <td>{{ item.product.title }}</td> <!-- Display Product Name -->
+                    <td>{{ item.quantity }}</td> <!-- Display Quantity -->
+                    <td>₹{{ item.product.price }}</td> <!-- Display Price -->
+                    <td>₹{{ item.total_price }}</td> <!-- Display Total for this product -->
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="6">Your cart is empty.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="4"></td>
+                <td><strong>Total Price:</strong></td>
+                <td><strong>₹{{ total_price }}</strong></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <!-- Update the form action to redirect to the process_payment view -->
+    <form method="post" action="{% url 'process_payment' %}">
+        {% csrf_token %}
+        <input type="hidden" name="order_id" value="{{ order_id }}">
+        <input type="hidden" name="total_price" value="{{ total_price }}">
+        <button type="submit" class="btn btn-success">Complete Purchase</button>
+    </form>
+</div>
+{% endblock %}

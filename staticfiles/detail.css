@@ -1,0 +1,30 @@
+/* Custom CSS */
+* {
+    padding: 0;
+    margin: 0;
+}
+
+/* Header */
+.header {
+    background-color: #FBCE;
+}
+
+.header img {
+    padding: 5px;
+}
+
+ul li a:hover {
+    background-color: white;
+    color: blue;
+}
+
+
+/* Footer */
+.footer {
+    background-color: #FBCE;
+    color: white;
+}
+.footer h5, .footer p {
+    margin-bottom: 5px;
+    font-size: 16px;
+}

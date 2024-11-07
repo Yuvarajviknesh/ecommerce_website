@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}
+Detail: {{ item.title }}
+{% endblock title %}
+
+{% block content %}
+<!-- Main Content -->
+<div class="container my-5" style="margin-top:-10px;">
+    <div class="row">
+        <!-- Product Image -->
+        <div class="col-md-6 text-center">
+            <img class="img-fluid" src="{{ item.image.url }}" alt="Product Image">
+        </div>
+
+        <!-- Product Details -->
+        <div class="col-md-6">
+            <h4>{{ item.description }}</h4>
+            <small>({{item.category.name}})</small>
+            <h3 style="margin:20px; font-weight: 600;">₹{{ item.price }}</h3>
+
+            <a href="{% url 'add_to_cart' item.id %}">
+                <button type="button" class="btn btn-warning btn-lg">Add to Cart</button>
+            </a>
+
+            <ul class="list-unstyled my-3" style="text-align:center;">
+                <li>Launched At: {{item.date_time|date:"F j, Y"}}</li>
+            </ul>
+
+            <!-- Dynamic Product Details -->
+            <div class="product-details my-4">
+                <h5>Product Details:</h5>
+                <ul class="list-unstyled">
+                    <li><strong>Color:</strong> {{ item.color }}</li>
+                    <li><strong>Size:</strong> {{ item.size }}</li>
+                    <li><strong>Weight:</strong> {{ item.weight }} kg</li>
+                    <li><strong>Material:</strong> {{ item.material }}</li>
+                    <li><strong>Warranty:</strong> {{ item.warranty }} years</li>
+                </ul>
+            </div>
+
+            <p>Related Products:</p>
+            <hr>
+
+            <!-- Related Products -->
+            <div class="row">
+                {% for related_product in related_products %}
+                <div class="col-sm-6 col-md-4 my-3">
+                    <div class="card">
+                        <img class="card-img-top" src="{{ related_product.image.url }}" alt="Related Product">
+                        <div class="card-body text-center">
+                            <h5>{{ related_product.title }}</h5>
+                            <p>{{ related_product.description|truncatechars:100 }}</p>
+                            <h6>₹{{ related_product.price }}</h6>
+                            <a href="{% url 'detail' slug=related_product.slug_url %}" class="btn btn-link">View Details</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
