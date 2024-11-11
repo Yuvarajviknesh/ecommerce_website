@@ -8,14 +8,15 @@ from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import render, get_object_or_404,redirect
 from django.contrib.auth.hashers import check_password
 import logging
+from django.utils import timezone
 from .models import Product
 from django.http import Http404
 from django.core.paginator import Paginator
-from .models import CartItem, Product,Cart,EndUser,Order
+from .models import CartItem, Product,Cart,EndUser,Order,OrderItem
 import re
 import uuid
-from .forms import ForgotPasswordForm, ResetPasswordForm 
-from .forms import SignupForm,LoginForm,PaymentForm
+from .forms import ForgotPasswordForm, ResetPasswordForm,OrderForm 
+from .forms import SignupForm,LoginForm
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.decorators import login_required
@@ -94,6 +95,8 @@ def index(request):
         username_part = user_email.split('@')[0]
         
         cleaned_username = re.sub(r'[^a-zA-Z]', '', username_part)
+
+        request.session['username']= cleaned_username
     
     paginator = Paginator(all_items, 6)  
     page_number = request.GET.get('page')  
@@ -226,44 +229,6 @@ def logout_view(request):
     
     return redirect('home') 
 
-def checkout(request):
-    # Check if the user is authenticated via session
-    if not request.session.get('is_authenticated'):
-        messages.error(request, "You need to be logged in to checkout.")
-        return redirect('login')
-    
-    user_email = request.session.get('muser_email')
-    user = get_object_or_404(EndUser, email=user_email)
-    order_id=generate_unique_order_id()
-    cart = Cart.objects.get(user=user)
-    cart_items = CartItem.objects.filter(cart=cart)
-    
-    if not cart_items.exists():
-        messages.error(request, "Your cart is empty!")
-        return redirect('cart')
-
-    total_price = sum(item.total_price() for item in cart_items)
-
-    request.session['total_price_checkout']=total_price
-
-    # Clean the username part for display purposes
-    cleaned_username = None
-    if user_email:
-        username_part = user_email.split('@')[0]
-        cleaned_username = re.sub(r'[^a-zA-Z]', '', username_part)
-
-    # Generate a unique order ID
-    
-
-    return render(request, 'checkout.html', {
-        'order_id':order_id,
-        'total_price': total_price,
-        'cart_items': cart_items,  # Pass cart_items to the template
-        'form': PaymentForm(),
-        'cleaned_username': cleaned_username
-    })
-
-
 def forgot_password(request):
     if request.method == 'POST':
         form = ForgotPasswordForm(request.POST)
@@ -336,60 +301,191 @@ def account_details(request):
     # Render the account details template with the user information
     return render(request, 'account.html',{'user':user})
 
-def payment_view(request):
-    return render(request, 'payment.html')
 
+from django.utils.crypto import get_random_string
 
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from .models import Order, Payment
-from .forms import PaymentForm  # Ensure you have this form defined
+def generate_unique_order_id():
+    return get_random_string(length=12).upper()
 
-logger = logging.getLogger(__name__)
-def process_payment(request):
-    # Check if user is authenticated via session
+def checkout(request):
+    # Check if the user is authenticated
     if not request.session.get('is_authenticated'):
-        messages.error(request, "You need to be logged in to make a payment.")
+        messages.error(request, "You need to be logged in to checkout.")
         return redirect('login')
 
+    user_email = request.session.get('muser_email')
+    user = get_object_or_404(EndUser, email=user_email)
+    cart = Cart.objects.get(user=user)
+    cart_items = CartItem.objects.filter(cart=cart)
+
+    if not cart_items.exists():
+        messages.error(request, "Your cart is empty!")
+        return redirect('cart')
+
+    # Calculate total price
+    total_price = sum(item.total_price() for item in cart_items)
+    request.session['total_price_checkout'] = total_price
+
+    # Clean username part for display purposes
+    cleaned_username = None
+    if user_email:
+        username_part = user_email.split('@')[0]
+        cleaned_username = re.sub(r'[^a-zA-Z]', '', username_part)
+
+    # Generate a unique order ID
+    order_id = generate_unique_order_id()
+
+    return render(request, 'checkout.html', {
+        'order_id': order_id,
+        'total_price': total_price,
+        'cart_items': cart_items,
+        'cleaned_username': cleaned_username
+    })
+
+def create_order(request):
+    # Check if the user is authenticated
+    if not request.session.get('is_authenticated'):
+        messages.error(request, "You need to be logged in to place an order.")
+        return redirect('login')
+
+    # Retrieve the user and cart
+    user_email = request.session.get('muser_email', None)
+    if user_email is None:
+        messages.error(request, 'You need to be logged in to place an order.')
+        return redirect('login')
+
+    user = get_object_or_404(EndUser, email=user_email)
+    cart = get_object_or_404(Cart, user=user)
+
     if request.method == 'POST':
-        form = PaymentForm(request.POST)
-        if form.is_valid():
-            order_id = form.cleaned_data['order_id']  # Get order_id from cleaned data
-            logger.debug(f'Attempting to process payment for order ID: {order_id}') 
-            total_amount = form.cleaned_data['total_price']
-            try:
-                # Retrieve the order by order_id
-                order = Order.objects.get(order_id=order_id)
-                
-                # Create a Payment instance
-                payment = Payment.objects.create(order=order, total_amount=total_amount, status='Pending')
-                
-                # Here, process the payment via your payment gateway
-                # Assume payment is successful
-                payment.status = 'Completed'  # Update payment status to completed
-                payment.save()
-                
-                messages.success(request, "Payment processed successfully!")
-                return redirect('order')  # Redirect to order tracking or confirmation page
-            except Order.DoesNotExist:
-                messages.error(request, "Invalid order ID.")
-        else:
-            messages.error(request, "There was an error in your payment form.")
+        # Get order details from form
+        contact_number = request.POST.get('contact_number')
+        pincode = request.POST.get('pincode')
+        street_address = request.POST.get('street_address')
+        city = request.POST.get('city')
+        state = request.POST.get('state')
+
+        if not all([contact_number, street_address, city, state, pincode]):
+            messages.error(request, "All fields are required.")
+            return redirect('checkout')
+
+        # Create Order
+        order = Order.objects.create(
+            user=user,
+            order_id=generate_unique_order_id(),
+            total_price=0,
+            status='Pending',
+            contact_number=contact_number,
+            pincode=pincode,
+            street_address=street_address,
+            city=city,
+            state=state,
+        )
+
+        # Add cart items to the order
+        total_price = 0
+        for cart_item in cart.cartitem_set.all():
+            OrderItem.objects.create(
+                order=order,
+                product=cart_item.product,
+                quantity=cart_item.quantity,
+                price=cart_item.product.price,
+            )
+            total_price += cart_item.total_price()
+
+        # Update order total price
+        order.total_price = total_price
+        order.save()
+
+        # Clear the cart
+        cart.cartitem_set.all().delete()
+        request.session ['order_id']= order.order_id
+
+        messages.success(request, f"Order {order.order_id} created successfully!")
+        return redirect('order_confirmation', order_id=order.order_id)
+
+    messages.error(request, "Invalid request method.")
+    return redirect('checkout')
+from datetime import timedelta
+
+
+def order_confirmation(request, order_id):
+    # Fetch the order object
+    order = get_object_or_404(Order, order_id=order_id)
+    user_email = request.session.get("muser_email")
+
+    username_part = user_email.split('@')[0]
+    username = re.sub(r'[^a-zA-Z]', '', username_part)
+
+
+    # Calculate estimated delivery date (7 days from order date)
+    estimated_delivery_date = order.order_date + timedelta(days=7)
+
+    # Send confirmation email
+    send_mail(
+        subject="Order Confirmation",
+        message=(
+            f"Hello {username},\n\n"
+            f"Thank you for your order! Your order ID is {order.order_id}.\n"
+            f"The total price is ₹{order.total_price}.\n"
+            f"Your order is expected to be delivered by {estimated_delivery_date.strftime('%Y-%m-%d')}.\n\n"
+            "Thank you for shopping with us!"
+        ),
+        from_email="your_email@gmail.com",
+        recipient_list=[order.user.email],  # Assuming the order has a related user with an email
+        fail_silently=False,
+    )
+
+    # Render the order confirmation page
+    return render(request, 'order_confirmation.html', {
+        'order_id': order.order_id,
+        'total_price': order.total_price,
+        'cart_items': order.items.all(),  # Use 'items' related name
+        'cleaned_username': username,
+        'estimated_delivery_date': estimated_delivery_date,
+    })
+
+
+def order_details(request):
+    user_email = request.session.get("muser_email")
+
+    if not user_email:
+        messages.error(request, "You need to be logged in to view your order details.")
+        return redirect('login')
     
-    else:
-        # If it's a GET request, make sure to pass an existing order_id to the form
-        order_id = request.GET.get('order_id')  # Ensure you pass this in the GET request
-        form = PaymentForm(initial={'order_id': order_id})  # Set initial data for the form
+    try:
+        user = EndUser.objects.get(email=user_email)
+    except EndUser.DoesNotExist:
+        messages.error(request, "User not found.")
+        return redirect('login')
+    
+    # Fetch all orders for the user
+    orders = Order.objects.filter(user=user)
 
-    return render(request, 'payment.html', {'form': form})  # Render the payment form
-def generate_unique_order_id():
-    prefix = "order-"
-    while True:
-        # Generate a random 10-digit number
-        unique_number = str(random.randint(1000000000, 9999999999))
-        order_id = f"{prefix}{unique_number}"
+    # Process each order to calculate progress and subtotals for order items
+    orders_data = []
+    for order in orders:
+        stages = ["Pending", "Processing", "Shipped", "Delivered"]
+        current_stage_index = stages.index(order.status) if order.status in stages else 0
+        progress_percentage = (current_stage_index + 1) / len(stages) * 100
 
-        # Check if the order_id already exists in the Order model
-        if not Order.objects.filter(order_id=order_id).exists():
-            return order_id
+        # Calculate the subtotal for each order item
+        order_items = []
+        for item in order.items.all():
+            subtotal = item.quantity * item.price
+            order_items.append({
+                'item': item,
+                'subtotal': subtotal
+            })
+
+        orders_data.append({
+            'order': order,
+            'order_items': order_items,
+            'progress_percentage': progress_percentage
+        })
+        username=request.session.get("username")
+
+    return render(request, 'order_details.html', {
+        'orders_data': orders_data,
+        'cleaned_username':username,
+    })

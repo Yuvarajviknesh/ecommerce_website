@@ -4,7 +4,7 @@
 <div class="container-fluid">
     <div class="dashboard-header">
         <h1>Sales</h1>
-        <p class="text-muted">View sales records</p>
+        <p class="text-muted">View and manage sales records</p>
     </div>
 
     <table class="table table-striped">
@@ -15,17 +15,47 @@
                 <th>Product</th>
                 <th>Quantity</th>
                 <th>Total Price</th>
+                <th>Status</th>
+                <th>Estimated Delivery</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             <!-- Loop over sales records from context -->
             {% for sale in sales %}
             <tr>
-                <td>{{ sale.id }}</td>
-                <td>{{ sale.customer.username }}</td>
+                <td>{{ sale.order.order_id }}</td>
+                <td>{{ sale.order.user.username }}</td>
                 <td>{{ sale.product.title }}</td>
                 <td>{{ sale.quantity }}</td>
-                <td>${{ sale.total_price }}</td>
+                <td>₹{{ sale.total_price }}</td>
+                <td>
+                    <!-- Display status and provide options to change it -->
+                    <form method="POST" action="{% url 'update_order_status' sale.order.id %}">
+                        {% csrf_token %}
+                        <select name="status" class="form-select" onchange="this.form.submit()">
+                            <option value="Pending" {% if sale.order.status == 'Pending' %}selected{% endif %}>Pending</option>
+                            <option value="Processing" {% if sale.order.status == 'Processing' %}selected{% endif %}>Processing</option>
+                            <option value="Shipped" {% if sale.order.status == 'Shipped' %}selected{% endif %}>Shipped</option>
+                            <option value="Delivered" {% if sale.order.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                            <option value="Cancelled" {% if sale.order.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                        </select>
+                    </form>
+                </td>
+                <td>
+                    <!-- Estimated Delivery Date -->
+                    <form method="POST" action="{% url 'update_delivery_date' sale.order.id %}">
+                        {% csrf_token %}
+                        <input type="date" name="estimated_delivery_date" class="form-control" value="{{ sale.order.estimated_delivery_date }}" onchange="this.form.submit()">
+                    </form>
+                </td>
+                <td>
+                    <!-- Edit Button (for status or other details) -->
+                    {% comment %} <a href="{% url 'edit_order' sale.order.id %}" class="btn btn-warning btn-sm">Edit</a> {% endcomment %}
+
+                    <!-- Print Receipt Button -->
+                    <a href="{% url 'print_receipt' sale.order.order_id %}" class="btn btn-success btn-sm" target="_blank">Print Receipt</a>
+                </td>
             </tr>
             {% endfor %}
         </tbody>

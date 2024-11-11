@@ -1,5 +1,5 @@
 from django import forms
-from .models import User,EndUser
+from .models import EndUser,Order
 
 class SignupForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput, label="Password")
@@ -29,25 +29,31 @@ class LoginForm(forms.Form):
     email = forms.EmailField(label="Email", required=True)
     password = forms.CharField(label="Password", widget=forms.PasswordInput, required=True)
 
-class PaymentForm(forms.Form):
-    order_id = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'readonly': 'readonly'}))
-    total_price=forms.IntegerField()
-    contact_number = forms.CharField(max_length=15)
-    pincode = forms.CharField(max_length=10)
-    street_address = forms.CharField(max_length=255, label="Street Address")
-    city = forms.CharField(max_length=100)
-    state = forms.CharField(max_length=100)
+class OrderForm(forms.ModelForm):
+    class Meta:
+        model = Order
+        fields = [
+            'total_price', 'contact_number', 'pincode', 'street_address', 'city', 'state'
+        ]
+        widgets = {
+            'street_address': forms.TextInput(attrs={'placeholder': 'Enter your street address'}),
+            'city': forms.TextInput(attrs={'placeholder': 'City'}),
+            'state': forms.TextInput(attrs={'placeholder': 'State'}),
+            'contact_number': forms.TextInput(attrs={'placeholder': 'Contact Number'}),
+            'pincode': forms.TextInput(attrs={'placeholder': '6-digit Pincode'}),
+            'total_price': forms.NumberInput(attrs={'placeholder': 'Total Price'}),
+        }
 
     def clean_contact_number(self):
         contact_number = self.cleaned_data.get('contact_number')
         if not contact_number.isdigit() or len(contact_number) < 10:
-            raise forms.ValidationError("Invalid contact number.")
+            raise forms.ValidationError("Invalid contact number. It must be at least 10 digits.")
         return contact_number
 
     def clean_pincode(self):
         pincode = self.cleaned_data.get('pincode')
         if not pincode.isdigit() or len(pincode) != 6:
-            raise forms.ValidationError("Invalid pincode.")
+            raise forms.ValidationError("Pincode must be a 6-digit number.")
         return pincode
     
 # forms.py
@@ -69,46 +75,3 @@ class ResetPasswordForm(forms.Form):
         if password and confirm_password and password != confirm_password:
             raise forms.ValidationError("Passwords do not match.")
         
-class PaymentForm(forms.Form):
-    order_id = forms.CharField(
-        max_length=100, 
-        widget=forms.TextInput(attrs={'readonly': 'readonly'}),
-        label="Order ID"  # Added label for clarity
-    )
-    total_price = forms.DecimalField(
-        max_digits=10, 
-        decimal_places=2, 
-        widget=forms.TextInput(attrs={'readonly': 'readonly'})  # Make total_price read-only if it's calculated
-    )
-    contact_number = forms.CharField(
-        max_length=15, 
-        label="Contact Number"
-    )
-    pincode = forms.CharField(
-        max_length=10, 
-        label="Pincode"
-    )
-    street_address = forms.CharField(
-        max_length=255, 
-        label="Street Address"
-    )
-    city = forms.CharField(
-        max_length=100, 
-        label="City"
-    )
-    state = forms.CharField(
-        max_length=100, 
-        label="State"
-    )
-
-    def clean_contact_number(self):
-        contact_number = self.cleaned_data.get('contact_number')
-        if not contact_number.isdigit() or len(contact_number) < 10:
-            raise forms.ValidationError("Invalid contact number. It should be numeric and at least 10 digits.")
-        return contact_number
-
-    def clean_pincode(self):
-        pincode = self.cleaned_data.get('pincode')
-        if not pincode.isdigit() or len(pincode) != 6:
-            raise forms.ValidationError("Invalid pincode. It should be numeric and exactly 6 digits.")
-        return pincode

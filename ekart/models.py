@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.text import slugify
 from django.contrib.auth.models import User
 from django.utils import timezone
+import uuid
 
 # Create Category model
 class Category(models.Model):
@@ -65,23 +66,46 @@ class CartItem(models.Model):
         return f"{self.quantity} x {self.product.title}"
     
 class Order(models.Model):
-    user = models.ForeignKey(EndUser, on_delete=models.CASCADE)
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Processing', 'Processing'),
+        ('Shipped', 'Shipped'),
+        ('Delivered', 'Delivered'),
+        ('Cancelled', 'Cancelled'),
+    ]
+
+    user = models.ForeignKey('EndUser', on_delete=models.CASCADE)
     order_date = models.DateTimeField(default=timezone.now)
-    street_address = models.CharField(max_length=255, blank=True) 
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.CharField(max_length=50, default='Pending')  
-    contact_number = models.CharField(max_length=15, blank=True)  
-    pincode = models.CharField(max_length=10, blank=True) 
-    street_address = models.CharField(max_length=255, blank=True)  
-    city = models.CharField(max_length=100, blank=True)  
-    state = models.CharField(max_length=100, blank=True)  
-    order_id = models.CharField(max_length=100, unique=True)  
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Pending')
+    contact_number = models.CharField(max_length=15, blank=True)
+    pincode = models.CharField(max_length=10, blank=True)
+    street_address = models.CharField(max_length=255, blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    state = models.CharField(max_length=100, blank=True)
+    order_id = models.CharField(max_length=100, unique=True, editable=False)
 
     def __str__(self):
-        return f"Order #{self.id} by {self.user.email} on {self.order_date.strftime('%Y-%m-%d')} (Total: {self.total_price})"
+        return f"Order #{self.order_id} by {self.user.email} on {self.order_date.strftime('%Y-%m-%d')} (Total: {self.total_price})"
+
+    def save(self, *args, **kwargs):
+        if not self.order_id:
+            self.order_id = str(uuid.uuid4().hex[:10])  # Generate a unique order_id if not provided
+        super(Order, self).save(*args, **kwargs)
 
     class Meta:
-        ordering = ['-order_date']  
+        ordering = ['-order_date']
+        indexes = [
+            models.Index(fields=['user']),
+            models.Index(fields=['order_id']),
+            models.Index(fields=['status']),
+            models.Index(fields=['order_date']),
+        ]
+
+    # Related name to access order items
+    def items(self):
+        return self.orderitem_set.all()  # Access related items using the 'items' related name
+
 
 class Payment(models.Model):
     order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name="payment")
@@ -95,3 +119,13 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"Payment for {self.order.order_id} - {self.status}"
+    
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")  # Use related_name 'items'
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.IntegerField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.quantity} x {self.product.title} at {self.price} each"
+

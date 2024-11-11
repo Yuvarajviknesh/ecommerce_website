@@ -16,7 +16,7 @@
                 {% for item in cart_items %}
                     <li class="list-group-item d-flex justify-content-between">
                         <span>{{ item.product.name }} - Quantity: {{ item.quantity }}</span>
-                        <span class="text-muted">₹{{ item.total_price }}</span>
+                        <span class="text-muted">${{ item.total_price }}</span>
                     </li>
                 {% endfor %}
             </ul>

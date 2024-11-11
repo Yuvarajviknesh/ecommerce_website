@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container my-5">
+    <h2>Your Orders</h2>
+
+    {% for order_data in orders_data %}
+    <div class="card my-3">
+        <div class="card-header">
+            <strong>Order ID:</strong> {{ order_data.order.order_id }} <br>
+            <strong>Status:</strong> {{ order_data.order.status }} <br>
+            <strong>Order Date:</strong> {{ order_data.order.order_date }} <br>
+            <strong>Total Price:</strong> ₹{{ order_data.order.total_price }}
+        </div>
+        <div class="card-body">
+            <h5>Items:</h5>
+            <ul class="list-group">
+                {% for order_item in order_data.order_items %}
+                <li class="list-group-item d-flex justify-content-between">
+                    {{ order_item.item.product.name }} - {{ order_item.item.quantity }} x ₹{{ order_item.item.price }}
+                    <span>Subtotal: ₹{{ order_item.subtotal }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            <div class="progress my-3">
+                <div class="progress-bar" role="progressbar" style="width: {{ order_data.progress_percentage }}%;" aria-valuenow="{{ order_data.progress_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                    {{ order_data.progress_percentage }}%
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

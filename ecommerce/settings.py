@@ -191,5 +191,5 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'yuvaraj25022003@gmail.com'
-EMAIL_HOST_PASSWORD = 'zbpx lvso qfpy snmq'
+EMAIL_HOST_PASSWORD = 'pbid pwcy bwyb uxwy'
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
