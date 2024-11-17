@@ -15,26 +15,43 @@
     </form>
 </div>
 
+<div class="container-fluid">
+    <div class="row">
+        <!-- Full Width Carousel with Fixed Height -->
+        <div class="col-12">
+            <div id="sidebarCarousel" class="carousel slide" data-bs-ride="carousel" style="height: 400px; width: 100%;">
+                <!-- Carousel Inner with Full-Height Image -->
+                <div class="carousel-inner" style="height: 100%;">
+                    {% for slide in slides %}
+                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                        <!-- Ensure image fills the carousel area and maintains aspect ratio -->
+                        <img src="{{ slide.image.url }}" class="d-block w-100 h-100 img-fluid" 
+                             alt="{{ slide.caption|default:'Sidebar Image' }}" 
+                             style="object-fit: cover; width: 100%; height: 100%;">
+                    </div>
+                    {% endfor %}
+                </div>
 
-<!-- Image Slideshow (Top) -->
-<div class="container my-5">
-    <div id="imageCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000">
-        <div class="carousel-inner">
-            {% for image in images %}
-            <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                <img src="{{ image.url }}" class="d-block w-100 img-fluid" alt="Carousel Image" 
-                     style="object-fit: cover; height: 400px; width: 100%;">
+                <!-- Carousel Controls (Left and Right) -->
+                <button class="carousel-control-prev" type="button" data-bs-target="#sidebarCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" style="background-color: gray; border-radius: 50%;" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#sidebarCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" style="background-color: gray; border-radius: 50%;" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+
+                <!-- Centered Carousel Indicators (Dots) -->
+                <div class="carousel-indicators position-absolute bottom-0 start-50 translate-middle-x mb-3">
+                    {% for slide in slides %}
+                    <button type="button" data-bs-target="#sidebarCarousel" data-bs-slide-to="{{ forloop.counter0 }}"
+                            class="{% if forloop.first %}active{% endif %}" aria-current="{% if forloop.first %}true{% endif %}"
+                            aria-label="Slide {{ forloop.counter }}"></button>
+                    {% endfor %}
+                </div>
             </div>
-            {% endfor %}
         </div>
-        <button class="carousel-control-prev" type="button" data-bs-target="#imageCarousel" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-            <span class="visually-hidden">Previous</span>
-        </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#imageCarousel" data-bs-slide="next">
-            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-            <span class="visually-hidden">Next</span>
-        </button>
     </div>
 </div>
 
@@ -48,10 +65,28 @@
                     <img src="{{ item.image.url }}" class="card-img-top img-fluid" alt="{{ item.title }}" style="object-fit: contain; height: 180px;">
                     <div class="card-body">
                         <h5 class="card-title">{{ item.category.name }}: {{ item.title }}</h5>
+                        
+                        <!-- Displaying Item Description -->
                         <p class="card-text">
                             <a href="{% url 'detail' slug=item.slug_url %}">{{ item.description|truncatechars:100 }}</a>
                         </p>
-                        <h6 class="price">₹{{ item.price }}</h6>
+                        
+                        <!-- Pricing Section -->
+                        <div>
+                            <h6 class="price">
+                                {% if item.offer_price %}
+                                <span class="text-muted text-decoration-line-through">₹{{ item.price }}</span> 
+                                <span class="text-success">₹{{ item.offer_price }}</span>
+                                {% else %}
+                                ₹{{ item.price }}
+                                {% endif %}
+                            </h6>
+                            
+                            <!-- Out of Stock Check -->
+                            {% if item.stock == 0 %}
+                            <span class="badge bg-danger">Out of Stock</span>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </a>

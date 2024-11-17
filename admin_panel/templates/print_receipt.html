@@ -64,7 +64,7 @@
     <div class="receipt">
         <h1>Order Receipt</h1>
         <p><strong>Order ID:</strong> {{ order.order_id }}</p>
-        <p><strong>Customer:</strong> {{ order.user.username }}</p>
+        <p><strong>Customer:</strong> {{ order.user }}</p>
         <p><strong>Status:</strong> {{ order.status }}</p>
         <p><strong>Estimated Delivery:</strong> {{ order.estimated_delivery_date }}</p>
 
@@ -95,7 +95,7 @@
         <!-- Print and Back Buttons -->
         <div class="buttons">
             <a href="{% url 'download_receipt_pdf' order.order_id %}">Download Receipt</a>
-            <button onclick="window.history.back()">Back to Orders</button>
+            <a href='{% url 'sales' %}'>Back to Sales</a>
         </div>
     </div>
 </body>

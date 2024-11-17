@@ -14,7 +14,7 @@
             <div class="card text-white bg-primary">
                 <div class="card-body">
                     <h5 class="card-title">Total Sales</h5>
-                    <p class="card-text">$12,500</p>
+                    <p class="card-text">₹{{ total_sales }}</p>
                 </div>
             </div>
         </div>
@@ -22,7 +22,7 @@
             <div class="card text-white bg-success">
                 <div class="card-body">
                     <h5 class="card-title">Products in Stock</h5>
-                    <p class="card-text">150 Items</p>
+                    <p class="card-text">{{ total_stock }} Items</p>
                 </div>
             </div>
         </div>
@@ -30,7 +30,7 @@
             <div class="card text-white bg-warning">
                 <div class="card-body">
                     <h5 class="card-title">New Orders</h5>
-                    <p class="card-text">23 Orders</p>
+                    <p class="card-text">{{ new_orders_count }} Orders</p>
                 </div>
             </div>
         </div>
@@ -57,20 +57,30 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
     // Sales Chart
     var salesCtx = document.getElementById('salesChart').getContext('2d');
     var salesChart = new Chart(salesCtx, {
         type: 'line',
         data: {
-            labels: ['January', 'February', 'March', 'April', 'May', 'June'],
+            labels: {{ months|safe }},  // Dynamic months data
             datasets: [{
-                label: 'Sales in $',
-                data: [1200, 1900, 3000, 5000, 2000, 3500],
+                label: 'Sales in ₹',
+                data: {{ sales_values|safe }},  // Dynamic sales values data
                 backgroundColor: 'rgba(54, 162, 235, 0.2)',
                 borderColor: 'rgba(54, 162, 235, 1)',
                 borderWidth: 2
             }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
         }
     });
 
@@ -79,10 +89,10 @@
     var inventoryChart = new Chart(inventoryCtx, {
         type: 'bar',
         data: {
-            labels: ['Laptops', 'Mobile Phones', 'Headphones', 'Cameras', 'Accessories'],
+            labels: {{ product_names|safe }},  // Dynamic product names
             datasets: [{
                 label: 'Stock Quantity',
-                data: [50, 70, 100, 30, 60],
+                data: {{ stock_quantities|safe }},  // Dynamic stock quantities
                 backgroundColor: [
                     'rgba(75, 192, 192, 0.2)',
                     'rgba(153, 102, 255, 0.2)',
@@ -99,6 +109,14 @@
                 ],
                 borderWidth: 2
             }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
         }
     });
 </script>

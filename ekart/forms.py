@@ -28,18 +28,19 @@ class SignupForm(forms.ModelForm):
 class LoginForm(forms.Form):
     email = forms.EmailField(label="Email", required=True)
     password = forms.CharField(label="Password", widget=forms.PasswordInput, required=True)
-
+    
 class OrderForm(forms.ModelForm):
     class Meta:
         model = Order
         fields = [
-            'total_price', 'contact_number', 'pincode', 'street_address', 'city', 'state'
+            'total_price', 'contact_number', 'alternate_contact_number', 'pincode', 'street_address', 'city', 'state'
         ]
         widgets = {
             'street_address': forms.TextInput(attrs={'placeholder': 'Enter your street address'}),
             'city': forms.TextInput(attrs={'placeholder': 'City'}),
             'state': forms.TextInput(attrs={'placeholder': 'State'}),
             'contact_number': forms.TextInput(attrs={'placeholder': 'Contact Number'}),
+            'alternate_contact_number': forms.TextInput(attrs={'placeholder': 'Alternate Contact Number'}),
             'pincode': forms.TextInput(attrs={'placeholder': '6-digit Pincode'}),
             'total_price': forms.NumberInput(attrs={'placeholder': 'Total Price'}),
         }
@@ -50,12 +51,19 @@ class OrderForm(forms.ModelForm):
             raise forms.ValidationError("Invalid contact number. It must be at least 10 digits.")
         return contact_number
 
+    def clean_alternate_contact_number(self):
+        alternate_contact_number = self.cleaned_data.get('alternate_contact_number')
+        if alternate_contact_number:  # Validate only if an alternate contact number is provided
+            if not alternate_contact_number.isdigit() or len(alternate_contact_number) < 10:
+                raise forms.ValidationError("Invalid alternate contact number. It must be at least 10 digits.")
+        return alternate_contact_number
+
     def clean_pincode(self):
         pincode = self.cleaned_data.get('pincode')
         if not pincode.isdigit() or len(pincode) != 6:
             raise forms.ValidationError("Pincode must be a 6-digit number.")
         return pincode
-    
+
 # forms.py
 
 from django import forms

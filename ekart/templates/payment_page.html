@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Payment Options</h2>
+
+    <form method="post" id="paymentForm">
+        {% csrf_token %}
+        
+        <p class="mb-4">Order ID: <strong>{{ order.order_id }}</strong> - Amount: ₹{{ order.total_price }}</p>
+
+        <!-- Payment Methods -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card border-primary">
+                    <div class="card-body text-center">
+                        <img src="https://powercorridors.in/wp-content/uploads/2024/06/gpay-1-1000x570.png" alt="UPI" class="img-fluid mb-3" style="width: 80px;">
+                        <h5 class="card-title">UPI (Google Pay)</h5>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="payment_method" id="upi" value="UPI" required>
+                            <label class="form-check-label" for="upi">Pay with UPI</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-primary">
+                    <div class="card-body text-center">
+                        <img src="https://www.startupinsider.in/wp-content/uploads/2023/06/Rupay.png" alt="Card Payment" class="img-fluid mb-3" style="width: 80px;">
+                        <h5 class="card-title">Credit/Debit Card</h5>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="payment_method" id="card" value="CARD" required>
+                            <label class="form-check-label" for="card">Pay with Card</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-primary">
+                    <div class="card-body text-center">
+                        <img src="https://static.vecteezy.com/system/resources/previews/035/026/415/non_2x/cash-on-delivery-or-cod-icon-design-for-shipping-coupon-bonus-logo-seal-tag-sign-seal-symbol-badge-stamp-sticker-template-website-apps-illustration-free-vector.jpg" alt="Cash on Delivery" class="img-fluid mb-3" style="width: 80px;">
+                        <h5 class="card-title">Cash on Delivery</h5>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="payment_method" id="cod" value="COD" required>
+                            <label class="form-check-label" for="cod">Cash on Delivery</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Proceed with Payment</button>
+    </form>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center">
+            <div class="modal-body">
+                <div class="icon-circle bg-success text-white mb-3" style="font-size: 50px;">
+                    <i class="fas fa-check"></i>
+                </div>
+                <h4 class="modal-title">Payment Successful!</h4>
+                <p>Your payment was processed successfully.</p>
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center">
+            <div class="modal-body">
+                <div class="icon-circle bg-danger text-white mb-3" style="font-size: 50px;">
+                    <i class="fas fa-times"></i>
+                </div>
+                <h4 class="modal-title">Payment Failed!</h4>
+                <p>There was an issue processing your payment. Please try again.</p>
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript to handle form submission and show modal -->
+<script>
+    document.getElementById("paymentForm").onsubmit = function(event) {
+        event.preventDefault();
+
+        // Simulating payment success or failure
+        let paymentSuccess = Math.random() > 0.5;  // Random success/failure for demo purposes
+
+        if (paymentSuccess) {
+            // Show success modal
+            let successModal = new bootstrap.Modal(document.getElementById('successModal'), {});
+            successModal.show();
+            setTimeout(() => this.submit(), 2000);  // Submit form after 2 seconds
+        } else {
+            // Show error modal
+            let errorModal = new bootstrap.Modal(document.getElementById('errorModal'), {});
+            errorModal.show();
+        }
+    }
+</script>
+{% endblock %}

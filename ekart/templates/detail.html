@@ -15,15 +15,30 @@ Detail: {{ item.title }}
         <!-- Product Details -->
         <div class="col-md-6">
             <h4>{{ item.description }}</h4>
-            <small>({{item.category.name}})</small>
-            <h3 style="margin:20px; font-weight: 600;">₹{{ item.price }}</h3>
+            <small>({{ item.category.name }})</small>
 
+            <!-- Price and Offer Price -->
+            {% if item.offer_price and item.offer_price < item.price %}
+            <h3 style="margin:20px; font-weight: 600;">
+                <span style="text-decoration: line-through; color: grey;">₹{{ item.price }}</span>
+                <span style="color: green;">₹{{ item.offer_price }}</span>
+            </h3>
+            {% else %}
+            <h3 style="margin:20px; font-weight: 600;">₹{{ item.price }}</h3>
+            {% endif %}
+
+            <!-- Stock and Add to Cart Button -->
+            {% if item.stock_quantity > 0 %}
+            <p class="text-success font-weight-bold my-3">In Stock: {{ item.stock_quantity }} available</p>
             <a href="{% url 'add_to_cart' item.id %}">
                 <button type="button" class="btn btn-warning btn-lg">Add to Cart</button>
             </a>
+            {% else %}
+            <p class="text-danger font-weight-bold my-3">Out of Stock</p>
+            {% endif %}
 
             <ul class="list-unstyled my-3" style="text-align:center;">
-                <li>Launched At: {{item.date_time|date:"F j, Y"}}</li>
+                <li>Launched At: {{ item.date_time|date:"F j, Y" }}</li>
             </ul>
 
             <!-- Dynamic Product Details -->
@@ -32,9 +47,9 @@ Detail: {{ item.title }}
                 <ul class="list-unstyled">
                     <li><strong>Color:</strong> {{ item.color }}</li>
                     <li><strong>Size:</strong> {{ item.size }}</li>
-                    <li><strong>Weight:</strong> {{ item.weight }} kg</li>
+                    <li><strong>Weight:</strong> {{ item.weight }}</li>
                     <li><strong>Material:</strong> {{ item.material }}</li>
-                    <li><strong>Warranty:</strong> {{ item.warranty }} years</li>
+                    <li><strong>Warranty:</strong> {{ item.warranty }}</li>
                 </ul>
             </div>
 
@@ -50,7 +65,14 @@ Detail: {{ item.title }}
                         <div class="card-body text-center">
                             <h5>{{ related_product.title }}</h5>
                             <p>{{ related_product.description|truncatechars:100 }}</p>
-                            <h6>₹{{ related_product.price }}</h6>
+                            <h6>
+                                {% if related_product.offer_price and related_product.offer_price < related_product.price %}
+                                <span style="text-decoration: line-through; color: grey;">₹{{ related_product.price }}</span>
+                                <span style="color: green;">₹{{ related_product.offer_price }}</span>
+                                {% else %}
+                                ₹{{ related_product.price }}
+                                {% endif %}
+                            </h6>
                             <a href="{% url 'detail' slug=related_product.slug_url %}" class="btn btn-link">View Details</a>
                         </div>
                     </div>

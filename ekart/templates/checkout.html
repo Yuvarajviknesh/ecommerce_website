@@ -2,167 +2,119 @@
 
 {% block content %}
 <div class="container mt-5">
-    <!-- Checkout container with card style -->
     <div class="checkout-box shadow-lg p-4 rounded">
         <h2 class="text-center mb-4">Checkout</h2>
 
-        <!-- Display cart summary and total price -->
-        <div class="checkout-summary mb-5">
-            <h3>Hello, {{ cleaned_username|default:"Guest" }}</h3>
-            <p><strong>Order ID:</strong> {{ order_id }}</p>
-            <p><strong>Total Price:</strong> ₹{{ total_price }}</p>
-            <h4>Items in your Cart:</h4>
-            <ul class="list-group">
-                {% for item in cart_items %}
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span>{{ item.product.name }} - Quantity: {{ item.quantity }}</span>
-                        <span class="text-muted">₹{{ item.total_price }}</span>
-                    </li>
-                {% endfor %}
-            </ul>
-        </div>
-
-        <!-- Shipping information form -->
-        <div class="checkout-form">
-            <h4>Shipping Information</h4>
-            <form action="{% url 'create_order' %}" method="post">
-                {% csrf_token %}
-
-                <div class="form-group mb-3">
-                    <label for="contact_number">Contact Number:</label>
-                    <input type="text" id="contact_number" name="contact_number" required class="form-control" placeholder="Enter your contact number">
+        <div class="row">
+            <!-- Left column: Product details -->
+            <div class="col-md-6">
+                <div class="checkout-summary mb-5">
+                    <h3>Hello, {{ cleaned_username|default:"Guest" }}</h3>
+                    <p><strong>Order ID:</strong> {{ order_id }}</p>
+                    <p><strong>Total Price:</strong> ₹{{ total_price }}</p>
+                    <h4>Items in your Cart:</h4>
+                    <ul class="list-group">
+                        {% for item in cart_items %}
+                            <li class="list-group-item d-flex align-items-center justify-content-between">
+                                <div class="d-flex">
+                                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="img-fluid" style="max-width: 100px; margin-right: 15px;">
+                                    <div>
+                                        <h5>{{ item.product.name }}</h5>
+                                        <p>{{ item.product.description|truncatewords:20 }}</p>
+                                        <p><strong>Quantity:</strong> {{ item.quantity }}</p>
+                                    </div>
+                                </div>
+                                <span class="text-muted">₹{{ item.total_price }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
                 </div>
+            </div>
 
-                <div class="form-group mb-3">
-                    <label for="pincode">Pincode:</label>
-                    <input type="text" id="pincode" name="pincode" required class="form-control" placeholder="Enter your pincode">
+            <!-- Right column: Shipping form -->
+            <div class="col-md-6">
+                <div class="checkout-form">
+                    <h4>Shipping Information</h4>
+                    <form action="{% url 'create_order' %}" method="post">
+                        {% csrf_token %}
+                        <div class="form-group mb-3">
+                            <label for="contact_number">Contact Number:</label>
+                            <input type="text" id="contact_number" name="contact_number" required class="form-control" placeholder="Enter your contact number">
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="alternate_contact_number">Alternate Contact Number (Optional):</label>
+                            <input type="text" id="alternate_contact_number" name="alternate_contact_number" class="form-control" placeholder="Enter an alternate contact number">
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="pincode">Pincode:</label>
+                            <input type="text" id="pincode" name="pincode" required class="form-control" placeholder="Enter your pincode">
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="street_address">Street Address:</label>
+                            <textarea id="street_address" name="street_address" required class="form-control" rows="3" placeholder="Enter your street address"></textarea>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="state">State:</label>
+                            <select id="state" name="state" class="form-control" required onchange="updateCities()">
+                                <option value="">Select State</option>
+                                <option value="Tamil Nadu">Tamil Nadu</option>
+                                <option value="Maharashtra">Maharashtra</option>
+                                <option value="Delhi">Delhi</option>
+                                <option value="Uttar Pradesh">Uttar Pradesh</option>
+                                <option value="Karnataka">Karnataka</option>
+                                <option value="West Bengal">West Bengal</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="city">City (District):</label>
+                            <select id="city" name="city" class="form-control" required>
+                                <option value="">Select City/District</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg btn-block">Place Order</button>
+                    </form>
                 </div>
-
-                <div class="form-group mb-3">
-                    <label for="street_address">Street Address:</label>
-                    <input type="text" id="street_address" name="street_address" required class="form-control" placeholder="Enter your street address">
-                </div>
-
-                <div class="form-group mb-3">
-                    <label for="city">City:</label>
-                    <input type="text" id="city" name="city" required class="form-control" placeholder="Enter your city">
-                </div>
-
-                <div class="form-group mb-3">
-                    <label for="state">State:</label>
-                    <input type="text" id="state" name="state" required class="form-control" placeholder="Enter your state">
-                </div>
-
-                <button type="submit" class="btn btn-primary btn-lg btn-block">Place Order</button>
-            </form>
+            </div>
         </div>
     </div>
 </div>
 {% endblock %}
 
-{% block styles %}
-<style>
-    /* Styling for the checkout page */
-    .checkout-box {
-        background-color: #fff;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        border-radius: 10px;
-        padding: 30px;
-        max-width: 900px;
-        margin: 0 auto;
-        transition: box-shadow 0.3s ease;
-    }
+{% block scripts %}
+<script>
+    function updateCities() {
+        const state = document.getElementById("state").value;
+        const citySelect = document.getElementById("city");
+        citySelect.innerHTML = "<option value=''>Select City/District</option>";
 
-    /* Hover effect for the checkout box */
-    .checkout-box:hover {
-        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
-    }
+        const citiesByState = {
+            "Tamil Nadu": [
+                "Ariyalur", "Chennai", "Coimbatore", "Cuddalore", "Dharmapuri", "Dindigul", "Erode", 
+                "Kanchipuram", "Kanyakumari", "Karur", "Krishnagiri", "Madurai", "Nagapattinam", "Namakkal", 
+                "Perambalur", "Pudukkottai", "Ramanathapuram", "Salem", "Sivaganga", "Thanjavur", "Theni", 
+                "Thoothukudi (Tuticorin)", "Tiruchirappalli (Trichy)", "Tirunelveli", "Tirupathur", "Tiruppur", 
+                "Tiruvallur", "Tiruvannamalai", "Tiruvarur", "Vellore", "Viluppuram", "Virudhunagar"
+            ],
+            "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Nashik", "Thane", "Aurangabad", "Kolhapur", "Solapur", "Amravati"],
+            "Delhi": ["New Delhi", "Central Delhi", "South Delhi", "West Delhi", "East Delhi", "North Delhi"],
+            "Karnataka": ["Bengaluru", "Mysuru", "Hubballi", "Dharwad", "Mangaluru", "Belagavi"],
+            "Uttar Pradesh": ["Lucknow", "Kanpur", "Agra", "Varanasi", "Meerut", "Prayagraj", "Ghaziabad", "Bareilly"],
+            "West Bengal": ["Kolkata", "Howrah", "Asansol", "Siliguri", "Durgapur"]
+        };
 
-    /* Header styling */
-    h2, h3, h4 {
-        color: #333;
+        const cities = citiesByState[state] || [];
+        cities.forEach(city => {
+            const option = document.createElement("option");
+            option.value = city;
+            option.textContent = city;
+            citySelect.appendChild(option);
+        });
     }
-
-    /* Cart summary section */
-    .checkout-summary {
-        padding: 15px;
-        background-color: #f9f9f9;
-        border-radius: 8px;
-        margin-bottom: 20px;
-    }
-
-    .checkout-summary h4 {
-        margin-top: 15px;
-        font-size: 1.2rem;
-        color: #555;
-    }
-
-    /* Styling for the cart items list */
-    .list-group-item {
-        border: none;
-        padding: 10px 15px;
-        font-size: 1rem;
-    }
-
-    .list-group-item span {
-        font-size: 1rem;
-    }
-
-    /* Form inputs and labels */
-    .form-group {
-        margin-bottom: 1.5rem;
-    }
-
-    .form-group label {
-        font-weight: bold;
-        color: #333;
-    }
-
-    .form-control {
-        border-radius: 8px;
-        padding: 12px;
-        font-size: 1rem;
-        border: 1px solid #ccc;
-        transition: border-color 0.3s;
-    }
-
-    .form-control:focus {
-        border-color: #4CAF50;
-        box-shadow: 0 0 5px rgba(0, 128, 0, 0.3);
-    }
-
-    /* Button styling */
-    .btn {
-        font-size: 1.1rem;
-        padding: 12px;
-        font-weight: bold;
-        border-radius: 5px;
-        transition: background-color 0.3s;
-    }
-
-    .btn-primary {
-        background-color: #007bff;
-        border-color: #007bff;
-    }
-
-    .btn-primary:hover {
-        background-color: #0056b3;
-        border-color: #0056b3;
-    }
-
-    .btn-lg {
-        padding: 15px;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .checkout-box {
-            padding: 20px;
-        }
-
-        .btn-lg {
-            font-size: 1rem;
-        }
-    }
-</style>
+</script>
 {% endblock %}

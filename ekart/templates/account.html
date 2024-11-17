@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<main class="py-5" style="margin-top: -100px;">
+<main class="py-5" style="margin-top: 20pxpx;">
     <div class="container">
         <h2>Account Details</h2>
         <table class="table table-striped">
@@ -15,10 +15,9 @@
             </tr>
             <tr>
                 <th>Join Date</th>
-                <td>{{ user.date_joined }}</td>
+                <td>{{ user.created_at }}</td>
             </tr>
         </table>
-        <a href="" class="btn btn-primary">Update Account Details</a>
         <a href="{% url "forgot_password" %}" class="btn btn-primary">Reset Password</a>
     </div>
 </main>

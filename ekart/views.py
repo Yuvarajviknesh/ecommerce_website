@@ -12,10 +12,11 @@ from django.utils import timezone
 from .models import Product
 from django.http import Http404
 from django.core.paginator import Paginator
-from .models import CartItem, Product,Cart,EndUser,Order,OrderItem
+from .models import CartItem, Product,Cart,EndUser,Order,OrderItem,Payment
+from admin_panel.models import Slide
 import re
-import uuid
-from .forms import ForgotPasswordForm, ResetPasswordForm,OrderForm 
+from django.db.models import Q
+from .forms import ForgotPasswordForm, ResetPasswordForm
 from .forms import SignupForm,LoginForm
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password
@@ -36,17 +37,12 @@ def Login_form(request):
         if form.is_valid():
             email = form.cleaned_data['email']
             password = form.cleaned_data['password']
-
-            # Check if user exists
             try:
                 user = EndUser.objects.get(email=email)
             except EndUser.DoesNotExist:
                 messages.error(request, 'Invalid email or password')
                 return redirect('login')
-
-            # Authenticate user manually using check_password
             if check_password(password, user.password):
-                # Store user email in session and set authenticated flag
                 request.session['muser_email'] = user.email
                 request.session['is_authenticated'] = True
 
@@ -64,7 +60,6 @@ def Sign_up(request):
     if request.method == 'POST':
         form = SignupForm(request.POST)
         if form.is_valid():
-            # Create and save the user
             user = form.save(commit=False)
             user.password = make_password(form.cleaned_data['password'])  
             user.save()
@@ -80,39 +75,52 @@ def Sign_up(request):
 
 
 def index(request):
-    query = request.GET.get('search')  
+    query = request.GET.get('search')
+    
+    # Search across multiple fields if a query is provided
     if query:
-        all_items = Product.objects.filter(title__icontains=query)  
+        all_items = Product.objects.filter(
+            Q(title__icontains=query) |
+            Q(description__icontains=query) |
+            Q(category__name__icontains=query) |
+            Q(price__icontains=query)
+        )
+        if not all_items.exists():  # Check if no results found
+            messages.info(request, "Sorry, no products found matching your search.")
+            all_items = Product.objects.all()  # Show all products as fallback
     else:
-        all_items = Product.objects.all()  
-   
+        all_items = Product.objects.all()
 
+    # Retrieve and clean the username from email
     user_email = request.session.get('muser_email', None)
-    
     cleaned_username = None
-    
     if user_email:
         username_part = user_email.split('@')[0]
-        
         cleaned_username = re.sub(r'[^a-zA-Z]', '', username_part)
+        request.session['username'] = cleaned_username
 
-        request.session['username']= cleaned_username
-    
-    paginator = Paginator(all_items, 6)  
-    page_number = request.GET.get('page')  
-    page_obj = paginator.get_page(page_number)  
-    
-    images = [
-        {"url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqNgdTnRQGBHnewy9tTUn1kWxH5Gc4vGxl7g&s", "alt": "Slide 1"},
-        {"url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSo_m83owHcDVnalVvx3vif7gtFvCmAQ5sctw&s", "alt": "Slide 2"},
-        {"url": "https://www.shutterstock.com/image-vector/special-offer-banner-vector-template-260nw-2474802375.jpg", "alt": "Slide 3"},
-        {"url": "https://static.vecteezy.com/system/resources/previews/012/278/243/non_2x/10-10-super-day-sale-banner-design-big-promotion-to-support-the-nine-month-sale-of-products-online-ads-for-the-web-social-media-and-online-shopping-vector.jpg", "alt": "Slide 4"},
-        {"url": "https://as2.ftcdn.net/v2/jpg/04/81/13/45/1000_F_481134571_86tGhu4iUxbnpqHrSpgshOnOHqrnw2iA.jpg", "alt": "Slide 5"}
-    ]
+        # Save cleaned username to EndUser model if it exists
+        try:
+            user = EndUser.objects.get(email=user_email)
+            user.username = cleaned_username
+            user.save()
+        except EndUser.DoesNotExist:
+            EndUser.objects.create(email=user_email, username=cleaned_username)
 
+    # Pagination
+    paginator = Paginator(all_items, 6)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
-    
-    return render(request, 'home.html', {'page_obj': page_obj, 'query': query, 'cleaned_username': cleaned_username,'images':images})
+    # Retrieve slide images from Slide model
+    slides = Slide.objects.all().order_by('order')  # Get slides ordered by the `order` field
+
+    return render(request, 'home.html', {
+        'page_obj': page_obj,
+        'query': query,
+        'cleaned_username': cleaned_username,
+        'slides': slides  # Pass slides to the template
+    })
 
 def detail(request, slug):
     # product = next((item for item in items if item['id'] == str(item_id)), None)
@@ -137,29 +145,19 @@ def detail(request, slug):
 logger = logging.getLogger(__name__)
 
 def add_to_cart(request, product_id):
-    # Ensure the user is authenticated via session
     user_email = request.session.get('muser_email', None)
 
     if user_email is None:
         messages.error(request, 'You need to be logged in to add items to the cart.')
         return redirect('login')
-
-    # Get the authenticated user object
     user = get_object_or_404(EndUser, email=user_email)
-
-    # Get the product
     product = get_object_or_404(Product, id=product_id)
-
-    # Get or create a cart for the session user (using the `user` field now)
     cart, created = Cart.objects.get_or_create(user=user)
-
-    # Check if the item is already in the cart, if not, create a new one
     cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
-    
     if created:
-        cart_item.quantity = 1  # Set initial quantity
+        cart_item.quantity = 1 
     else:
-        cart_item.quantity += 1  # Increment quantity if already in the cart
+        cart_item.quantity += 1 
     
     cart_item.save()
     
@@ -198,31 +196,33 @@ def cart(request):
     
     if user_email:
         username_part = user_email.split('@')[0]
-        
         cleaned_username = re.sub(r'[^a-zA-Z]', '', username_part)
 
     if user_email is None:
         messages.error(request, 'You need to be logged in to view the cart.')
         return redirect('login')
 
-    # Get the authenticated user object
     user = get_object_or_404(EndUser, email=user_email)
-
-    # Fetch the cart items for the session user
     cart, created = Cart.objects.get_or_create(user=user)
     cart_items = CartItem.objects.filter(cart=cart)
-
-    # Calculate the total price
-    total_price = sum(item.total_price() for item in cart_items)
     
-    return render(request, "cart.html", {'cart_items': cart_items, 'total_price': total_price,'cleaned_username':cleaned_username})
+    total_price = 0
+    item_details = []
+    
+    for item in cart_items:
+        price = item.product.offer_price if item.product.offer_price else item.product.price
+        item_total = price * item.quantity
+        item_details.append({
+            'item': item,
+            'item_total': item_total
+        })
+        total_price += item_total
 
-
-
-import random
-
-
-
+    return render(request, "cart.html", {
+        'cart_items': item_details,
+        'total_price': total_price,
+        'cleaned_username': cleaned_username
+    })
 def logout_view(request):
     logout(request)
     messages.success(request, "You have been logged out successfully.")
@@ -236,20 +236,14 @@ def forgot_password(request):
             email = form.cleaned_data['email']
             try:
                 user = EndUser.objects.get(email=email)
-                
-                # Generate a token and save it to the user model
                 reset_token = get_random_string(length=32)
                 user.reset_token = reset_token
                 user.save()
-                
-                # Build reset link with the reset token
                 reset_link = request.build_absolute_uri(reverse('reset_password', args=[reset_token]))
-
-                # Send the email
                 send_mail(
                     'Password Reset Request',
                     f'Click the link to reset your password: {reset_link}',
-                    'your-email@example.com',  # Use your actual email here
+                    'your-email@example.com',
                     [email],
                     fail_silently=False,
                 )
@@ -263,15 +257,14 @@ def forgot_password(request):
     return render(request, 'forgot_password.html', {'form': form})
 
 def reset_password(request, token):
-    # Find the user with the matching reset token
     user = get_object_or_404(EndUser, reset_token=token)
     
     if request.method == 'POST':
         form = ResetPasswordForm(request.POST)
         if form.is_valid():
             new_password = form.cleaned_data['password']
-            user.password = make_password(new_password)  # Hash the new password
-            user.reset_token = None  # Clear the reset token after use
+            user.password = make_password(new_password) 
+            user.reset_token = None  
             user.save()
             messages.success(request, "Your password has been reset successfully.")
             return redirect('login')
@@ -281,25 +274,19 @@ def reset_password(request, token):
     return render(request, 'reset_password.html', {'form': form})
 
 def account_details(request):
-    # Get the user email from the session
-    user_email = request.session.get('muser_email')  # Ensure you're using the correct session key
-
-    # Check if the user is logged in
+    user_email = request.session.get('muser_email') 
     if user_email is None:
         messages.error(request, 'You need to be logged in to view account details.')
-        return redirect('login')  # Redirect to the login page if not logged in
+        return redirect('login') 
 
     try:
-        # Fetch the user object based on the email
         user = EndUser.objects.get(email=user_email)
-        username_part = user_email.split('@')[0]
-        cleaned_username = re.sub(r'[^a-zA-Z]', '', username_part)
+        cleaned_username= user.username    
     except EndUser.DoesNotExist:
         messages.error(request, 'User does not exist.')
-        return redirect('login')  # Redirect if the user does not exist
+        return redirect('login')  
 
-    # Render the account details template with the user information
-    return render(request, 'account.html',{'user':user})
+    return render(request, 'account.html',{'user':user,'cleaned_username':cleaned_username})
 
 
 from django.utils.crypto import get_random_string
@@ -308,7 +295,6 @@ def generate_unique_order_id():
     return get_random_string(length=12).upper()
 
 def checkout(request):
-    # Check if the user is authenticated
     if not request.session.get('is_authenticated'):
         messages.error(request, "You need to be logged in to checkout.")
         return redirect('login')
@@ -321,18 +307,13 @@ def checkout(request):
     if not cart_items.exists():
         messages.error(request, "Your cart is empty!")
         return redirect('cart')
+    total_price = sum(item.product.offer_price if item.product.offer_price else item.product.price for item in cart_items)
 
-    # Calculate total price
-    total_price = sum(item.total_price() for item in cart_items)
     request.session['total_price_checkout'] = total_price
-
-    # Clean username part for display purposes
     cleaned_username = None
     if user_email:
         username_part = user_email.split('@')[0]
         cleaned_username = re.sub(r'[^a-zA-Z]', '', username_part)
-
-    # Generate a unique order ID
     order_id = generate_unique_order_id()
 
     return render(request, 'checkout.html', {
@@ -341,85 +322,104 @@ def checkout(request):
         'cart_items': cart_items,
         'cleaned_username': cleaned_username
     })
-
 def create_order(request):
-    # Check if the user is authenticated
     if not request.session.get('is_authenticated'):
         messages.error(request, "You need to be logged in to place an order.")
         return redirect('login')
 
-    # Retrieve the user and cart
-    user_email = request.session.get('muser_email', None)
+    user_email = request.session.get('muser_email')
     if user_email is None:
-        messages.error(request, 'You need to be logged in to place an order.')
+        messages.error(request, "You need to be logged in to place an order.")
         return redirect('login')
 
     user = get_object_or_404(EndUser, email=user_email)
     cart = get_object_or_404(Cart, user=user)
 
     if request.method == 'POST':
-        # Get order details from form
+        # Extract form data
         contact_number = request.POST.get('contact_number')
+        alternate_contact_number = request.POST.get('alternate_contact_number')  # New field
         pincode = request.POST.get('pincode')
         street_address = request.POST.get('street_address')
         city = request.POST.get('city')
         state = request.POST.get('state')
 
+        # Check for required fields
         if not all([contact_number, street_address, city, state, pincode]):
-            messages.error(request, "All fields are required.")
+            messages.error(request, "All required fields must be filled.")
             return redirect('checkout')
 
-        # Create Order
+        # Validate contact numbers
+        if not contact_number.isdigit() or len(contact_number) < 10:
+            messages.error(request, "Contact number must be at least 10 digits.")
+            return redirect('checkout')
+
+        if alternate_contact_number and (not alternate_contact_number.isdigit() or len(alternate_contact_number) < 10):
+            messages.error(request, "Alternate contact number must be at least 10 digits if provided.")
+            return redirect('checkout')
+
+        # Create the order
         order = Order.objects.create(
             user=user,
             order_id=generate_unique_order_id(),
             total_price=0,
             status='Pending',
             contact_number=contact_number,
+            alternate_contact_number=alternate_contact_number,  # Save the new field
             pincode=pincode,
             street_address=street_address,
             city=city,
             state=state,
         )
 
-        # Add cart items to the order
+        # Calculate total price and create order items
         total_price = 0
         for cart_item in cart.cartitem_set.all():
+            item_price = cart_item.product.offer_price if cart_item.product.offer_price else cart_item.product.price
             OrderItem.objects.create(
                 order=order,
                 product=cart_item.product,
                 quantity=cart_item.quantity,
-                price=cart_item.product.price,
+                price=item_price,
             )
-            total_price += cart_item.total_price()
+            total_price += item_price * cart_item.quantity
 
-        # Update order total price
         order.total_price = total_price
         order.save()
 
         # Clear the cart
         cart.cartitem_set.all().delete()
-        request.session ['order_id']= order.order_id
 
-        messages.success(request, f"Order {order.order_id} created successfully!")
-        return redirect('order_confirmation', order_id=order.order_id)
+        # Store order ID in session and redirect to payment
+        request.session['order_id'] = order.order_id
+        return redirect('payment_page')
 
+    # Handle invalid request methods
     messages.error(request, "Invalid request method.")
     return redirect('checkout')
-from datetime import timedelta
 
+from datetime import timedelta
+from django.db import transaction
 
 def order_confirmation(request, order_id):
-    # Fetch the order object
     order = get_object_or_404(Order, order_id=order_id)
     user_email = request.session.get("muser_email")
 
     username_part = user_email.split('@')[0]
     username = re.sub(r'[^a-zA-Z]', '', username_part)
-
-
-    # Calculate estimated delivery date (7 days from order date)
     estimated_delivery_date = order.order_date + timedelta(days=7)
+
+    # Subtract stock for each product in the order
+    with transaction.atomic():  # Ensure atomicity to prevent partial updates
+        for item in order.items.all():  # Access related OrderItems
+            product = item.product
+            if product.stock_quantity >= item.quantity:
+                product.stock_quantity -= item.quantity
+                product.save()
+            else:
+                # Handle insufficient stock gracefully
+                messages.error(request, f"Insufficient stock for {product.title}.")
+                return redirect('cart')  # Redirect back to cart or appropriate page
 
     # Send confirmation email
     send_mail(
@@ -432,19 +432,17 @@ def order_confirmation(request, order_id):
             "Thank you for shopping with us!"
         ),
         from_email="your_email@gmail.com",
-        recipient_list=[order.user.email],  # Assuming the order has a related user with an email
+        recipient_list=[order.user.email], 
         fail_silently=False,
     )
 
-    # Render the order confirmation page
     return render(request, 'order_confirmation.html', {
         'order_id': order.order_id,
         'total_price': order.total_price,
-        'cart_items': order.items.all(),  # Use 'items' related name
+        'cart_items': order.items.all(),
         'cleaned_username': username,
         'estimated_delivery_date': estimated_delivery_date,
     })
-
 
 def order_details(request):
     user_email = request.session.get("muser_email")
@@ -459,23 +457,20 @@ def order_details(request):
         messages.error(request, "User not found.")
         return redirect('login')
     
-    # Fetch all orders for the user
     orders = Order.objects.filter(user=user)
-
-    # Process each order to calculate progress and subtotals for order items
     orders_data = []
     for order in orders:
         stages = ["Pending", "Processing", "Shipped", "Delivered"]
         current_stage_index = stages.index(order.status) if order.status in stages else 0
         progress_percentage = (current_stage_index + 1) / len(stages) * 100
 
-        # Calculate the subtotal for each order item
         order_items = []
         for item in order.items.all():
             subtotal = item.quantity * item.price
             order_items.append({
                 'item': item,
-                'subtotal': subtotal
+                'subtotal': subtotal,
+                'product_image': item.product.image.url if item.product.image else None  # Add product image URL
             })
 
         orders_data.append({
@@ -487,5 +482,37 @@ def order_details(request):
 
     return render(request, 'order_details.html', {
         'orders_data': orders_data,
-        'cleaned_username':username,
+        'cleaned_username': username,
     })
+def payment_page(request):
+    order_id = request.session.get('order_id')
+    if not order_id:
+        messages.error(request, "Order not found.")
+        return redirect('checkout')
+
+    order = get_object_or_404(Order, order_id=order_id)
+
+    if request.method == 'POST':
+        payment_method = request.POST.get('payment_method')
+        
+        if payment_method in ['UPI', 'CARD', 'COD']:
+            order.status = 'Paid'
+            order.payment_method = payment_method
+            order.save()
+            payment = Payment.objects.create(
+                user=order.user,
+                order_id=order.order_id,
+                amount=order.total_price,
+                payment_method=payment_method,
+                status='Completed', 
+                transaction_id=f"TXN{order_id}"  
+            )
+
+            messages.success(request, f"Payment successful with {payment_method}!")
+            return redirect('order_confirmation', order_id=order_id)
+
+        messages.error(request, "Payment failed. Please try again.")
+        return redirect('payment_page')
+
+    return render(request, 'payment_page.html', {'order': order})
+    

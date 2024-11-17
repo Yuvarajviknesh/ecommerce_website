@@ -17,10 +17,19 @@
             <ul class="list-group">
                 {% for item in cart_items %}
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>{{ item.product.title }}</strong> <br>  <!-- Changed from 'name' to 'title' -->
-                            Quantity: {{ item.quantity }}
+                        <div class="d-flex">
+                            <!-- Product Image -->
+                            <img src="{{ item.product.image.url }}" alt="{{ item.product.title }}" class="img-fluid" style="max-width: 80px; margin-right: 15px;">
+                            
+                            <!-- Product Title, Description, and Quantity -->
+                            <div>
+                                <strong>{{ item.product.title }}</strong><br>
+                                <p>{{ item.product.description|truncatewords:15 }}</p>
+                                <p><strong>Quantity:</strong> {{ item.quantity }}</p>
+                            </div>
                         </div>
+                        
+                        <!-- Product Price -->
                         <span class="badge bg-secondary badge-pill">
                             ₹{{ item.price|floatformat:2 }}
                         </span>

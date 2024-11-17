@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% load static %}
 {% block content %}
 <div class="container my-5">
     <h2>Your Orders</h2>
@@ -16,19 +16,77 @@
             <h5>Items:</h5>
             <ul class="list-group">
                 {% for order_item in order_data.order_items %}
-                <li class="list-group-item d-flex justify-content-between">
-                    {{ order_item.item.product.name }} - {{ order_item.item.quantity }} x ₹{{ order_item.item.price }}
-                    <span>Subtotal: ₹{{ order_item.subtotal }}</span>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <!-- Display product image, name, quantity, and price -->
+                    <div class="d-flex align-items-center">
+                        {% if order_item.product_image %}
+                        <img src="{{ order_item.product_image }}" alt="{{ order_item.item.product.title }}" width="60" height="60" class="mr-3 rounded">
+                        {% else %}
+                        <img src="{% static 'logo.png' %}" alt="No Image Available" width="60" height="60" class="mr-3 rounded">
+                        {% endif %}
+                        <div>
+                            <strong>{{ order_item.item.product.title }}</strong><br>
+                            <p>{{ order_item.item.product.description|truncatewords:10 }}</p>
+                            <span>{{ order_item.item.quantity }} x ₹{{ order_item.item.price }}</span>
+                        </div>
+                    </div>
+                    <span><strong>Subtotal:</strong> ₹{{ order_item.subtotal }}</span>
                 </li>
                 {% endfor %}
             </ul>
-            <div class="progress my-3">
-                <div class="progress-bar" role="progressbar" style="width: {{ order_data.progress_percentage }}%;" aria-valuenow="{{ order_data.progress_percentage }}" aria-valuemin="0" aria-valuemax="100">
-                    {{ order_data.progress_percentage }}%
+
+            <!-- Stylish Progress Bar -->
+            <div class="my-3">
+                <label for="progress" class="font-weight-bold">Order Progress</label>
+                <div class="progress" style="height: 20px; border-radius: 25px;">
+                    <div class="progress-bar" role="progressbar" style="width: {{ order_data.progress_percentage }}%;" aria-valuenow="{{ order_data.progress_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                        <span class="progress-text" style="color: white; font-weight: bold;">{{ order_data.progress_percentage }}%</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     {% endfor %}
 </div>
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* Custom styling for the progress bar */
+    .progress {
+        background-color: #f4f4f4;
+    }
+    
+    .progress-bar {
+        background-color: #28a745;
+        transition: width 0.6s ease;
+        font-size: 1rem;
+        text-align: center;
+        line-height: 20px;
+    }
+
+    .progress-text {
+        font-size: 1rem;
+        font-weight: bold;
+    }
+
+    /* Add spacing between items in the order */
+    .list-group-item {
+        padding: 15px 20px;
+        border: 1px solid #e0e0e0;
+    }
+
+    .list-group-item img {
+        border-radius: 10px;
+    }
+
+    .list-group-item strong {
+        font-size: 1.1rem;
+    }
+
+    .list-group-item p {
+        font-size: 0.9rem;
+        color: #555;
+    }
+</style>
 {% endblock %}

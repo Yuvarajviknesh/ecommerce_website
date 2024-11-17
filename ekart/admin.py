@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import Product,Category,EndUser,Cart,CartItem,Order
+from admin_panel.models import Slide
 # Register your models here.
 
 class ProductAdmin(admin.ModelAdmin):
@@ -13,3 +14,10 @@ admin.site.register(EndUser)
 admin.site.register(Cart)
 admin.site.register(CartItem)
 admin.site.register(Order)
+
+
+@admin.register(Slide)
+class SlideAdmin(admin.ModelAdmin):
+    list_display = ('caption', 'order', 'image')
+    list_editable = ('order',)
+    search_fields = ('caption',)

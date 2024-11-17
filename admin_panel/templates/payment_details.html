@@ -1,0 +1,44 @@
+{% extends "basetemplate.html" %}
+{% block title %}Payments{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="dashboard-header">
+        <h1>Payments</h1>
+        <p class="text-muted">View and download payment history</p>
+    </div>
+
+    <!-- Export Buttons -->
+    <div class="d-flex justify-content-end mb-3">
+        <a href="{% url 'export_payments_pdf' %}" class="btn btn-primary me-2">Download PDF</a>
+        <a href="{% url 'export_payments_excel' %}" class="btn btn-primary">Download Payment History as Excel</a>
+    </div>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Order ID</th>
+                <th>Amount</th>
+                <th>Payment Method</th>
+                <th>Transaction ID</th>
+                <th>Status</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for payment in payments %}
+            <tr>
+                <td>{{ payment.user }}</td>
+                <td>{{ payment.order_id }}</td>
+                <td>₹{{ payment.amount }}</td>
+                <td>{{ payment.get_payment_method_display }}</td>
+                <td>{{ payment.transaction_id|default:"N/A" }}</td>
+                <td>{{ payment.status }}</td>
+                <td>{{ payment.created_at|date:"d M Y, h:i A" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
