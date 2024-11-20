@@ -1,13 +1,14 @@
 {% extends "base.html" %}
 {% block title %}Your Cart{% endblock title %}
 {% load static %}
+
 {% block content %}
-<div class="container my-5">
-    <h2 class="mb-4">Your Shopping Cart</h2>
+<div class="container my-5 py-5">
+    <h2 class="mb-4 text-center custom-heading">Your Shopping Cart</h2>
 
     {% if cart_items %}
-        <table class="table table-striped table-bordered">
-            <thead class="thead-light">
+        <table class="table custom-table">
+            <thead class="thead-custom">
                 <tr>
                     <th></th>
                     <th>Product</th>
@@ -19,9 +20,9 @@
             </thead>
             <tbody>
                 {% for item_detail in cart_items %}
-                    <tr>
+                    <tr class="custom-row">
                         <td style="width: 120px;">
-                            <img src="{{ item_detail.item.product.image.url }}" alt="{{ item_detail.item.product.title }}" class="img-fluid" style="width: 100%; height: auto;">
+                            <img src="{{ item_detail.item.product.image.url }}" alt="{{ item_detail.item.product.title }}" class="img-fluid custom-img">
                         </td>
                         <td>
                             <h5>{{ item_detail.item.product.title }}</h5>
@@ -40,14 +41,14 @@
                                 {% csrf_token %}
                                 <div class="input-group">
                                     <button type="button" class="btn btn-outline-secondary" onclick="this.parentNode.querySelector('input[type=number]').stepDown();">
-                                        <img src="{% static "minus.png" %}" alt="Minus" style="width: 20px; height: 20px;">
+                                        <img src="{% static 'minus.png' %}" alt="Minus" class="icon">
                                     </button>
-                                    <input type="number" name="quantity" min="1" value="{{ item_detail.item.quantity }}" class="form-control" style="width: 60px; margin: 0 5px;">
+                                    <input type="number" name="quantity" min="1" value="{{ item_detail.item.quantity }}" class="form-control quantity-input">
                                     <button type="button" class="btn btn-outline-secondary" onclick="this.parentNode.querySelector('input[type=number]').stepUp();">
-                                        <img src="{% static "plus.png" %}" alt="Plus" style="width: 20px; height: 20px;">
+                                        <img src="{% static 'plus.png' %}" alt="Plus" class="icon">
                                     </button>
                                 </div>
-                                <button type="submit" class="btn btn-primary btn-sm ms-2">Update</button>
+                                <button type="submit" class="btn btn-update btn-sm ms-2">Update</button>
                             </form>
                         </td>
                         <td>
@@ -64,10 +65,10 @@
             </tbody>
         </table>
 
-        <h3 class="text-right">Total Price: ₹{{ total_price }}</h3>
+        <h3 class="text-right text-info custom-total">Total Price: ₹{{ total_price }}</h3>
 
         <div class="text-right my-4">
-            <a href="{% url 'checkout' %}" class="btn btn-success btn-lg">Proceed to Checkout</a>
+            <a href="{% url 'checkout' %}" class="btn btn-checkout btn-lg">Proceed to Checkout</a>
         </div>
     {% else %}
         <h3 class="text-center" style="margin-top:50px; margin-bottom:200px;">Your cart is empty.</h3>
@@ -75,21 +76,119 @@
 </div>
 
 <style>
-    .table {
-        background-color: #fff;
-        border-radius: 5px;
-        overflow: hidden;
+    /* General Table Styling */
+    .custom-table {
+        background-color: #f9f9f9;
+        border-radius: 10px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
-    .thead-light th {
-        background-color: #3cb371;
+
+    .thead-custom {
+        background-color: #2b3a42; /* Dark Grey Blue */
         color: white;
         font-weight: bold;
     }
-    .btn {
-        transition: background-color 0.3s ease;
+
+    .table th, .table td {
+        vertical-align: middle;
+        padding: 12px;
     }
-    .btn:hover {
-        background-color: #3cb371;
+
+    .custom-row:hover {
+        background-color: #f1f1f1;
+        cursor: pointer;
+    }
+
+    /* Button Styling */
+    .btn {
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .btn-update {
+        background-color: #28a745;
+        border: none;
+        color: white;
+    }
+
+    .btn-update:hover {
+        background-color: darkgreen;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .btn-danger {
+        background-color: #dc3545;
+        border: none;
+    }
+
+    .btn-danger:hover {
+        background-color: #c82333;
+        transform: translateY(-2px);
+    }
+
+    .btn-checkout {
+        background-color: #ff6600;
+        border: none;
+    }
+
+    .btn-checkout:hover {
+        background-color: #e65c00;
+        transform: translateY(-2px);
+    }
+
+    /* Quantity Input Button Styling */
+    .btn-outline-secondary {
+        border-color: #6c757d;
+        color: #6c757d;
+    }
+
+    .btn-outline-secondary:hover {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .icon {
+        width: 20px;
+        height: 20px;
+    }
+
+    /* Custom Input Styling */
+    .quantity-input {
+        text-align: center;
+        width: 60px;
+        margin: 0 5px;
+    }
+
+    /* Total Price Styling */
+    .custom-total {
+        font-size: 1.3rem;
+        font-weight: bold;
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 768px) {
+        .table th, .table td {
+            font-size: 14px;
+        }
+
+        .btn-sm {
+            font-size: 0.9rem;
+        }
+
+        .input-group {
+            width: 100%;
+        }
+
+        .btn-update, .btn-checkout {
+            width: 100%;
+            font-size: 1.1rem;
+        }
+
+        .custom-img {
+            max-height: 80px;
+        }
     }
 </style>
+
 {% endblock %}

@@ -1,4 +1,6 @@
 import io
+import calendar
+from datetime import datetime, timedelta
 import re
 from django.shortcuts import render, redirect,get_object_or_404,HttpResponse
 from django.contrib.auth.models import User
@@ -7,7 +9,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from ekart.models import Product,EndUser,Order,OrderItem,Category,Payment
 from .models import Supplier,Slide
-from django.db.models import Sum
+from django.db.models import Sum, Count
 from .forms import ProductForm,CategoryForm,SupplierForm,SlideForm
 from xhtml2pdf import pisa
 from django.template.loader import get_template
@@ -35,40 +37,67 @@ def admin_panel(request):
 
 @login_required
 def admin_dashboard(request):
+    # Total sales from delivered orders
     total_sales = Order.objects.filter(status='Delivered').aggregate(Sum('total_price'))['total_price__sum'] or 0
-    total_sales = float(total_sales)  
+    total_sales = float(total_sales)
 
+    # Total stock of products
     total_stock = Product.objects.aggregate(Sum('stock_quantity'))['stock_quantity__sum'] or 0
-    total_stock = int(total_stock) 
+    total_stock = int(total_stock)
 
+    # Count of new orders
     new_orders_count = Order.objects.filter(status__in=['Pending', 'Processing']).count()
 
+    # Today's sales
+    today = datetime.today()
+    today_sales = Order.objects.filter(status='Delivered', order_date__date=today).aggregate(Sum('total_price'))['total_price__sum'] or 0
+    today_sales = float(today_sales)
+
+    # Monthly sales data
     sales_data = (
         Order.objects.filter(status='Delivered')
         .values('order_date__month')
         .annotate(total_sales=Sum('total_price'))
         .order_by('order_date__month')
     )
-
-    months = [str(item['order_date__month']) for item in sales_data]
+    months = [calendar.month_name[item['order_date__month']] for item in sales_data]
     sales_values = [float(item['total_sales']) for item in sales_data]
 
-    
-    products = Product.objects.all()
-    product_names = [product.title for product in products]
-    stock_quantities = [product.stock_quantity for product in products]
+    # Product inventory data
+    products = Product.objects.values_list('title', 'stock_quantity')
+    product_names, stock_quantities = zip(*products) if products else ([], [])
+
+    # Daily sales and orders data for the last 7 days
+    days = [today - timedelta(days=i) for i in range(7)]
+    daily_sales = []
+    daily_orders = []
+
+    for day in days:
+        daily_sales.append(
+            Order.objects.filter(status='Delivered', order_date__date=day.date()).aggregate(Sum('total_price'))['total_price__sum'] or 0
+        )
+        daily_orders.append(
+            Order.objects.filter(order_date__date=day.date()).count()
+        )
+
+    daily_sales = [float(sale) for sale in daily_sales]
+    daily_orders = [int(order) for order in daily_orders]
 
     context = {
         'total_sales': total_sales,
         'total_stock': total_stock,
         'new_orders_count': new_orders_count,
+        'today_sales': today_sales,
         'months': json.dumps(months),
         'sales_values': json.dumps(sales_values),
         'product_names': json.dumps(product_names),
         'stock_quantities': json.dumps(stock_quantities),
+        'daily_sales': json.dumps(daily_sales),
+        'daily_orders': json.dumps(daily_orders),
     }
 
     return render(request, 'admin_dashboard.html', context)
+
 @login_required
 def admin_products(request):
     products = Product.objects.all()

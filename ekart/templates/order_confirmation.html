@@ -1,28 +1,28 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container my-5">
-    <div class="card">
-        <div class="card-header bg-success text-white text-center">
-            <h2>Order Confirmation</h2>
+<div class="container my-5 pt-5">
+    <div class="card custom-card">
+        <div class="card-header custom-header text-center">
+            <h2 class="custom-title">Order Confirmation</h2>
         </div>
-        <div class="card-body">
-            <p class="text-center">Thank you for your order!</p>
+        <div class="card-body custom-body">
+            <p class="text-center custom-message">Thank you for your order!</p>
             
-            <h4 class="text-primary">Order Details</h4>
+            <h4 class="text-primary custom-subtitle">Order Details</h4>
             <p><strong>Order ID:</strong> {{ order_id }}</p>
             <p><strong>Total Price:</strong> ₹{{ total_price }}</p>
 
-            <h5 class="mt-4">Items in your order:</h5>
-            <ul class="list-group">
+            <h5 class="mt-4 custom-items-title">Items in your order:</h5>
+            <ul class="list-group custom-list-group">
                 {% for item in cart_items %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <li class="list-group-item d-flex justify-content-between align-items-center custom-list-item">
                         <div class="d-flex">
                             <!-- Product Image -->
-                            <img src="{{ item.product.image.url }}" alt="{{ item.product.title }}" class="img-fluid" style="max-width: 80px; margin-right: 15px;">
+                            <img src="{{ item.product.image.url }}" alt="{{ item.product.title }}" class="img-fluid custom-img">
                             
                             <!-- Product Title, Description, and Quantity -->
-                            <div>
+                            <div class="custom-product-details">
                                 <strong>{{ item.product.title }}</strong><br>
                                 <p>{{ item.product.description|truncatewords:15 }}</p>
                                 <p><strong>Quantity:</strong> {{ item.quantity }}</p>
@@ -30,18 +30,127 @@
                         </div>
                         
                         <!-- Product Price -->
-                        <span class="badge bg-secondary badge-pill">
+                        <span class="badge custom-badge">
                             ₹{{ item.price|floatformat:2 }}
                         </span>
                     </li>
                 {% endfor %}
             </ul>
 
-            <p class="mt-4 text-center">We will send a confirmation email with the shipping details shortly.</p>
+            <p class="mt-4 text-center custom-message">We will send a confirmation email with the shipping details shortly.</p>
             <div class="text-center">
-                <a href="{% url 'home' %}" class="btn btn-primary">Return to Home</a>
+                <a href="{% url 'home' %}" class="btn custom-btn">Return to Home</a>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    /* Customizing the card styling */
+    .custom-card {
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        border-radius: 12px;
+        background-color: #f9f9f9;
+    }
+
+    .custom-header {
+        background-color: #1a73e8; /* Custom header color */
+        border-radius: 12px 12px 0 0;
+        padding: 20px;
+    }
+
+    .custom-title {
+        font-family: 'Roboto', sans-serif;
+        font-weight: 600;
+        color: white;
+    }
+
+    .custom-body {
+        padding: 2rem;
+        font-family: 'Lato', sans-serif;
+        color: #333;
+    }
+
+    .custom-message {
+        font-size: 1.1rem;
+        color: #555;
+    }
+
+    .custom-subtitle {
+        font-size: 1.5rem;
+        margin-bottom: 10px;
+    }
+
+    .custom-items-title {
+        font-size: 1.3rem;
+        margin-bottom: 15px;
+    }
+
+    .custom-list-group {
+        margin-top: 20px;
+    }
+
+    .custom-list-item {
+        background-color: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        margin-bottom: 15px;
+    }
+
+    .custom-list-item:hover {
+        background-color: #f1f1f1;
+        cursor: pointer;
+    }
+
+    .custom-img {
+        max-width: 80px;
+        margin-right: 15px;
+    }
+
+    .custom-product-details {
+        font-size: 0.9rem;
+    }
+
+    .custom-badge {
+        background-color: #28a745;
+        color: white;
+        padding: 8px 15px;
+        border-radius: 20px;
+    }
+
+    .custom-btn {
+        background-color: #1a73e8;
+        color: white;
+        font-size: 1.1rem;
+        padding: 12px 25px;
+        border-radius: 8px;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .custom-btn:hover {
+        background-color: #005bb5;
+        transform: translateY(-3px);
+    }
+
+    .custom-btn:active {
+        transform: translateY(0);
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 768px) {
+        .custom-body {
+            padding: 1.5rem;
+        }
+
+        .custom-img {
+            max-width: 60px;
+            margin-right: 10px;
+        }
+
+        .custom-btn {
+            font-size: 1rem;
+            padding: 10px 20px;
+        }
+    }
+</style>
 {% endblock %}

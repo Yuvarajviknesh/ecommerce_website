@@ -1,14 +1,16 @@
 {% extends "basetemplate.html" %}
+
 {% block title %}Dashboard Overview{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
+    <!-- Dashboard Header -->
     <div class="dashboard-header mb-4">
         <h1>Welcome to Admin Panel</h1>
         <p class="text-muted">Overview of your eCommerce store's performance</p>
     </div>
 
-    <!-- Row of Cards for quick stats -->
+    <!-- Quick Stats Row -->
     <div class="row mb-4">
         <div class="col-md-4">
             <div class="card text-white bg-primary">
@@ -36,13 +38,25 @@
         </div>
     </div>
 
-    <!-- Graphs -->
+    <!-- Today's Sales Card -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h5 class="card-title">Today's Sales</h5>
+                    <p class="card-text">₹{{ today_sales }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
     <div class="row">
         <div class="col-md-6">
             <div class="card mb-4">
                 <div class="card-body">
                     <h5 class="card-title">Sales Over Time</h5>
-                    <canvas id="salesChart"></canvas>
+                    <canvas id="salesChart" width="400" height="300"></canvas>
                 </div>
             </div>
         </div>
@@ -50,74 +64,161 @@
             <div class="card mb-4">
                 <div class="card-body">
                     <h5 class="card-title">Inventory Status</h5>
-                    <canvas id="inventoryChart"></canvas>
+                    <canvas id="inventoryChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Sales and Orders Section -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Daily Sales (Last 7 Days)</h5>
+                    <canvas id="dailySalesChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Daily Orders (Last 7 Days)</h5>
+                    <canvas id="dailyOrdersChart" width="400" height="300"></canvas>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Include Chart.js Library -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+<!-- Chart Scripts -->
 <script>
+    // Parse data from the server
+    var months = {{ months|safe }} || [];
+    var salesValues = {{ sales_values|safe }} || [];
+    var productNames = {{ product_names|safe }} || [];
+    var stockQuantities = {{ stock_quantities|safe }} || [];
+    var dailySales = {{ daily_sales|safe }} || [];
+    var dailyOrders = {{ daily_orders|safe }} || [];
+
     // Sales Chart
-    var salesCtx = document.getElementById('salesChart').getContext('2d');
-    var salesChart = new Chart(salesCtx, {
-        type: 'line',
-        data: {
-            labels: {{ months|safe }},  // Dynamic months data
-            datasets: [{
-                label: 'Sales in ₹',
-                data: {{ sales_values|safe }},  // Dynamic sales values data
-                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true
+    if (months.length && salesValues.length) {
+        var salesCtx = document.getElementById('salesChart').getContext('2d');
+        var salesChart = new Chart(salesCtx, {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [{
+                    label: 'Sales in ₹',
+                    data: salesValues,
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
                 }
             }
-        }
-    });
+        });
+    }
 
     // Inventory Chart
-    var inventoryCtx = document.getElementById('inventoryChart').getContext('2d');
-    var inventoryChart = new Chart(inventoryCtx, {
-        type: 'bar',
-        data: {
-            labels: {{ product_names|safe }},  // Dynamic product names
-            datasets: [{
-                label: 'Stock Quantity',
-                data: {{ stock_quantities|safe }},  // Dynamic stock quantities
-                backgroundColor: [
-                    'rgba(75, 192, 192, 0.2)',
-                    'rgba(153, 102, 255, 0.2)',
-                    'rgba(255, 159, 64, 0.2)',
-                    'rgba(255, 99, 132, 0.2)',
-                    'rgba(54, 162, 235, 0.2)'
-                ],
-                borderColor: [
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(153, 102, 255, 1)',
-                    'rgba(255, 159, 64, 1)',
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(54, 162, 235, 1)'
-                ],
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true
+    if (productNames.length && stockQuantities.length) {
+        var inventoryCtx = document.getElementById('inventoryChart').getContext('2d');
+        var inventoryChart = new Chart(inventoryCtx, {
+            type: 'bar',
+            data: {
+                labels: productNames,
+                datasets: [{
+                    label: 'Stock Quantity',
+                    data: stockQuantities,
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)',
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
                 }
             }
-        }
-    });
+        });
+    }
+
+    // Daily Sales Chart
+    if (dailySales.length) {
+        var dailySalesCtx = document.getElementById('dailySalesChart').getContext('2d');
+        var dailySalesChart = new Chart(dailySalesCtx, {
+            type: 'line',
+            data: {
+                labels: ['Today', 'Yesterday', '2 Days Ago', '3 Days Ago', '4 Days Ago', '5 Days Ago', '6 Days Ago'],
+                datasets: [{
+                    label: 'Daily Sales ₹',
+                    data: dailySales,
+                    backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                    borderColor: 'rgba(255, 159, 64, 1)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    // Daily Orders Chart
+    if (dailyOrders.length) {
+        var dailyOrdersCtx = document.getElementById('dailyOrdersChart').getContext('2d');
+        var dailyOrdersChart = new Chart(dailyOrdersCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Today', 'Yesterday', '2 Days Ago', '3 Days Ago', '4 Days Ago', '5 Days Ago', '6 Days Ago'],
+                datasets: [{
+                    label: 'Daily Orders',
+                    data: dailyOrders,
+                    backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                    borderColor: 'rgba(153, 102, 255, 1)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
 </script>
+
 {% endblock %}

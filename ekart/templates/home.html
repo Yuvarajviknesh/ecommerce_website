@@ -1,161 +1,167 @@
 {% extends 'base.html' %}
-{% load static %}  <!-- Load static files -->
+{% load static %}
 
 {% block content %}
+<!-- Main Container -->
+<div class="container-fluid mt-3">
 
-<!-- Search Form -->
-<div class="container" style="margin-top:-30px;">
-    <form class="form row justify-content-center my-5">
-        <div class="col-12 col-md-6">
-            <input class="form-control" type="search" placeholder="Search" aria-label="Search" name="search">
-        </div>
-        <div class="col-12 col-md-2 mt-3 mt-md-0">
-            <button class="btn btn-outline-success w-100" type="submit">Search</button>
-        </div>
-    </form>
-</div>
+    <!-- Search Bar Section -->
+    <div class="row justify-content-center mb-4">
+        <div class="col-md-8">
+           <!-- Main Search Bar Section -->
+<form method="get" action="" class="d-flex shadow-sm p-3 bg-white rounded">
+    <!-- Category Dropdown -->
+    <select class="form-select me-2" name="category" style="width: 200px;" aria-label="Select Category">
+        <option value="">Select Category</option>
+        {% for category in categories %}
+            <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+        {% endfor %}
+    </select>
 
-<div class="container-fluid">
-    <div class="row">
-        <!-- Full Width Carousel with Fixed Height -->
+    <!-- Search Bar -->
+        <input 
+            class="form-control me-2" 
+            type="search" 
+            placeholder="Search for products..." 
+            aria-label="Search" 
+            name="search" 
+            value="{{ request.GET.search|default:'' }}">
+
+            <!-- Search Button -->
+            <button class="btn btn-outline-primary" type="submit">Search</button>
+        </form>
+
+        </div>
+    </div>
+
+    <!-- Carousel Section -->
+    <div class="row mb-4">
         <div class="col-12">
-            <div id="sidebarCarousel" class="carousel slide" data-bs-ride="carousel" style="height: 400px; width: 100%;">
-                <!-- Carousel Inner with Full-Height Image -->
-                <div class="carousel-inner" style="height: 100%;">
+            <div id="sidebarCarousel" class="carousel slide" data-bs-ride="carousel">
+                <!-- Carousel Inner -->
+                <div class="carousel-inner">
                     {% for slide in slides %}
                     <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                        <!-- Ensure image fills the carousel area and maintains aspect ratio -->
-                        <img src="{{ slide.image.url }}" class="d-block w-100 h-100 img-fluid" 
-                             alt="{{ slide.caption|default:'Sidebar Image' }}" 
-                             style="object-fit: cover; width: 100%; height: 100%;">
+                        <img 
+                            src="{{ slide.image.url }}" 
+                            class="d-block w-100" 
+                            alt="{{ slide.caption|default:'Advertisement' }}" 
+                            style="object-fit: cover; height: 400px;">
                     </div>
                     {% endfor %}
                 </div>
 
-                <!-- Carousel Controls (Left and Right) -->
+                <!-- Carousel Controls -->
                 <button class="carousel-control-prev" type="button" data-bs-target="#sidebarCarousel" data-bs-slide="prev">
-                    <span class="carousel-control-prev-icon" style="background-color: gray; border-radius: 50%;" aria-hidden="true"></span>
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                     <span class="visually-hidden">Previous</span>
                 </button>
                 <button class="carousel-control-next" type="button" data-bs-target="#sidebarCarousel" data-bs-slide="next">
-                    <span class="carousel-control-next-icon" style="background-color: gray; border-radius: 50%;" aria-hidden="true"></span>
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
                     <span class="visually-hidden">Next</span>
                 </button>
-
-                <!-- Centered Carousel Indicators (Dots) -->
-                <div class="carousel-indicators position-absolute bottom-0 start-50 translate-middle-x mb-3">
-                    {% for slide in slides %}
-                    <button type="button" data-bs-target="#sidebarCarousel" data-bs-slide-to="{{ forloop.counter0 }}"
-                            class="{% if forloop.first %}active{% endif %}" aria-current="{% if forloop.first %}true{% endif %}"
-                            aria-label="Slide {{ forloop.counter }}"></button>
-                    {% endfor %}
-                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Items Grid -->
-<div class="container">
+    <!-- Products Grid -->
     <div class="row">
         {% for item in page_obj %}
-        <div class="col-md-4 col-sm-6 col-12 my-3">
-            <a href="{% url 'detail' slug=item.slug_url %}">
-                <div class="card h-100 shadow">
-                    <img src="{{ item.image.url }}" class="card-img-top img-fluid" alt="{{ item.title }}" style="object-fit: contain; height: 180px;">
+        <div class="col-md-4 col-sm-6 col-12 mb-4">
+            <div class="card h-100 shadow-sm">
+                <a href="{% url 'detail' slug=item.slug_url %}" class="text-decoration-none text-dark">
+                    <img 
+                        src="{{ item.image.url }}" 
+                        class="card-img-top" 
+                        alt="{{ item.title }}" 
+                        style="height: 200px; object-fit: contain;">
                     <div class="card-body">
-                        <h5 class="card-title">{{ item.category.name }}: {{ item.title }}</h5>
-                        
-                        <!-- Displaying Item Description -->
-                        <p class="card-text">
-                            <a href="{% url 'detail' slug=item.slug_url %}">{{ item.description|truncatechars:100 }}</a>
-                        </p>
-                        
-                        <!-- Pricing Section -->
+                        <h5 class="card-title">{{ item.title }}</h5>
+                        <p class="card-text">{{ item.description|truncatechars:80 }}</p>
                         <div>
-                            <h6 class="price">
+                            <h6>
                                 {% if item.offer_price %}
-                                <span class="text-muted text-decoration-line-through">₹{{ item.price }}</span> 
+                                <span class="text-muted text-decoration-line-through">₹{{ item.price }}</span>
                                 <span class="text-success">₹{{ item.offer_price }}</span>
                                 {% else %}
                                 ₹{{ item.price }}
                                 {% endif %}
                             </h6>
-                            
-                            <!-- Out of Stock Check -->
                             {% if item.stock == 0 %}
                             <span class="badge bg-danger">Out of Stock</span>
                             {% endif %}
                         </div>
                     </div>
-                </div>
-            </a>
+                </a>
+            </div>
         </div>
         {% endfor %}
     </div>
-</div>
 
-<!-- Pagination -->
-<div class="row justify-content-center my-4">
-    {% if page_obj.has_other_pages %}
-    <nav aria-label="Page navigation">
-        <ul class="pagination">
-            {% if page_obj.has_previous %}
-            <li class="page-item">
-                <a class="page-link" href="?page=1" aria-label="First">
-                    <span aria-hidden="true">&laquo; first</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
-                    <span aria-hidden="true">previous</span>
-                </a>
-            </li>
-            {% endif %}
-            <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.</span></li>
-            {% if page_obj.has_next %}
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
-                    <span aria-hidden="true">next</span>
-                </a>
-            </li>
-            <li class="page-item">
-                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
-                    <span aria-hidden="true">last &raquo;</span>
-                </a>
-            </li>
-            {% endif %}
-        </ul>
-    </nav>
-    {% endif %}
-</div>
-
-{% endblock %}
-
-{% block header_nav %}
-<!-- Updated Social Media Navigation with App Icon -->
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="#">Brand</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="https://instagram.com"><img src="{% static 'instagram-Logo.png' %}" alt="Instagram" width="20"></a>
+    <!-- Pagination -->
+    <div class="row justify-content-center">
+        {% if page_obj.has_other_pages %}
+        <nav>
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1" aria-label="First">
+                        &laquo; First
+                    </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="https://facebook.com"><img src="{% static 'facebook-logo.jpg' %}" alt="Facebook" width="20"></a>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                        &lsaquo; Previous
+                    </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="https://whatsapp.com"><img src="{% static 'whatsapp-logo.webp' %}" alt="WhatsApp" width="20"></a>
+                {% endif %}
+                <li class="page-item disabled">
+                    <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#"><img src="{% static 'x-logo.png' %}" alt="Apps" width="20"></a>
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                        Next &rsaquo;
+                    </a>
                 </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                        Last &raquo;
+                    </a>
+                </li>
+                {% endif %}
             </ul>
-        </div>
+        </nav>
+        {% endif %}
     </div>
-</nav>
+</div>
+
+{% block styles %}
+<style>
+    /* Custom Pagination Styles */
+    .pagination {
+        display: flex;
+        justify-content: center;
+        padding: 10px 0;
+    }
+    .pagination .page-item {
+        margin: 0 5px;
+    }
+    .pagination .page-link {
+        color: #f3a847; /* Yellowish orange color */
+        background-color: transparent;
+        border: 1px solid #f3a847;
+        font-size: 1rem;
+    }
+    .pagination .page-link:hover {
+        color: white;
+        background-color: #f3a847;
+        border-color: #f3a847;
+    }
+    .pagination .page-item.disabled .page-link {
+        color: #ccc;
+        border-color: #ccc;
+    }
+</style>
+{% endblock %}
 {% endblock %}

@@ -1,11 +1,10 @@
-<!-- templates/login.html -->
 {% extends "base.html" %}
 {% block title %}Login{% endblock title %}
 
 {% block content %}
-<div class="container-fluid" style="margin-top:-50px;">
-    <div class="row justify-content-center mt-5">
-        <div class="col-md-4"> <!-- Reduced form block size -->
+<div class="container-fluid" style="margin-top: 100px; margin-bottom: 100px;">
+    <div class="row justify-content-center">
+        <div class="col-md-4"> <!-- Optimized form block size -->
             <div class="card p-4 shadow-sm">
                 <h3 class="text-center mb-4">Login</h3>
 
@@ -16,13 +15,21 @@
                     <!-- Email Field -->
                     <div class="col-12">
                         <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control {% if form.email.errors %}is-invalid{% endif %}" id="email" name="email" required>
+                        <input type="email" 
+                               class="form-control {% if form.email.errors %}is-invalid{% endif %}" 
+                               id="email" 
+                               name="email" 
+                               required>
                     </div>
 
                     <!-- Password Field -->
                     <div class="col-12">
                         <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control {% if form.password.errors %}is-invalid{% endif %}" id="password" name="password" required>
+                        <input type="password" 
+                               class="form-control {% if form.password.errors %}is-invalid{% endif %}" 
+                               id="password" 
+                               name="password" 
+                               required>
                     </div>
 
                     <!-- Submit Button -->
@@ -44,5 +51,4 @@
         </div>
     </div>
 </div>
-
 {% endblock %}

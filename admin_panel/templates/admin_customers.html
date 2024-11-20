@@ -24,7 +24,7 @@
                     <tr>
                         <td>{{ customer.id }}</td>
                         <td>{{ customer.email }}</td>
-                        <td>{{ customer.password }}</td>
+                        <td>{{ customer.password|truncatechars:30 }}</td>
                         <td>{{ customer.created_at }}</td>
                     </tr>
                     {% empty %}

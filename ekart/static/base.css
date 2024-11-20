@@ -91,13 +91,13 @@ body {
 }
 
 .page-item .page-link {
-    color: #28a745;
+    color: #232f3e;
     border-radius: 5px;
 }
 
 .page-item.active .page-link,
 .page-item .page-link:hover {
-    background-color: #28a745;
+    background-color: gray;
     color: white;
 }
 

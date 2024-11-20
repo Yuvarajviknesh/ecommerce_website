@@ -1,49 +1,51 @@
 {% extends "base.html" %}
+
 {% block title %}
 Detail: {{ item.title }}
 {% endblock title %}
 
 {% block content %}
 <!-- Main Content -->
-<div class="container my-5" style="margin-top:-10px;">
+<div class="container my-5" style="padding-top: 80px; padding-bottom: 50px;">
     <div class="row">
         <!-- Product Image -->
-        <div class="col-md-6 text-center">
-            <img class="img-fluid" src="{{ item.image.url }}" alt="Product Image">
+        <div class="col-md-6 text-center mb-4 mb-md-0">
+            <img class="img-fluid rounded shadow-sm" src="{{ item.image.url }}" alt="Product Image" style="max-height: 400px; object-fit: contain;">
         </div>
 
         <!-- Product Details -->
         <div class="col-md-6">
-            <h4>{{ item.description }}</h4>
-            <small>({{ item.category.name }})</small>
+            <h4 class="mb-3 text-primary">{{ item.description }}</h4>
+            <small class="text-muted">({{ item.category.name }})</small>
 
             <!-- Price and Offer Price -->
             {% if item.offer_price and item.offer_price < item.price %}
-            <h3 style="margin:20px; font-weight: 600;">
-                <span style="text-decoration: line-through; color: grey;">₹{{ item.price }}</span>
-                <span style="color: green;">₹{{ item.offer_price }}</span>
+            <h3 class="my-3 font-weight-bold">
+                <span class="text-decoration-line-through text-muted">₹{{ item.price }}</span>
+                <span class="text-success">₹{{ item.offer_price }}</span>
             </h3>
             {% else %}
-            <h3 style="margin:20px; font-weight: 600;">₹{{ item.price }}</h3>
+            <h3 class="my-3 font-weight-bold">₹{{ item.price }}</h3>
             {% endif %}
 
             <!-- Stock and Add to Cart Button -->
             {% if item.stock_quantity > 0 %}
             <p class="text-success font-weight-bold my-3">In Stock: {{ item.stock_quantity }} available</p>
             <a href="{% url 'add_to_cart' item.id %}">
-                <button type="button" class="btn btn-warning btn-lg">Add to Cart</button>
+                <button type="button" class="btn btn-lg btn-primary">Add to Cart</button>
             </a>
             {% else %}
             <p class="text-danger font-weight-bold my-3">Out of Stock</p>
             {% endif %}
 
-            <ul class="list-unstyled my-3" style="text-align:center;">
-                <li>Launched At: {{ item.date_time|date:"F j, Y" }}</li>
+            <!-- Product Launch Date -->
+            <ul class="list-unstyled my-3 text-center">
+                <li><strong>Launched At:</strong> {{ item.date_time|date:"F j, Y" }}</li>
             </ul>
 
             <!-- Dynamic Product Details -->
             <div class="product-details my-4">
-                <h5>Product Details:</h5>
+                <h5 class="text-muted">Product Details:</h5>
                 <ul class="list-unstyled">
                     <li><strong>Color:</strong> {{ item.color }}</li>
                     <li><strong>Size:</strong> {{ item.size }}</li>
@@ -53,27 +55,27 @@ Detail: {{ item.title }}
                 </ul>
             </div>
 
-            <p>Related Products:</p>
-            <hr>
+            <p class="text-muted">Related Products:</p>
+            <hr class="my-4" style="border-color: #e0e0e0;">
 
             <!-- Related Products -->
             <div class="row">
                 {% for related_product in related_products %}
                 <div class="col-sm-6 col-md-4 my-3">
-                    <div class="card">
+                    <div class="card shadow-sm border-0">
                         <img class="card-img-top" src="{{ related_product.image.url }}" alt="Related Product">
                         <div class="card-body text-center">
-                            <h5>{{ related_product.title }}</h5>
-                            <p>{{ related_product.description|truncatechars:100 }}</p>
+                            <h5 class="text-primary">{{ related_product.title }}</h5>
+                            <p class="card-text">{{ related_product.description|truncatechars:100 }}</p>
                             <h6>
                                 {% if related_product.offer_price and related_product.offer_price < related_product.price %}
-                                <span style="text-decoration: line-through; color: grey;">₹{{ related_product.price }}</span>
-                                <span style="color: green;">₹{{ related_product.offer_price }}</span>
+                                <span class="text-decoration-line-through text-muted">₹{{ related_product.price }}</span>
+                                <span class="text-success">₹{{ related_product.offer_price }}</span>
                                 {% else %}
                                 ₹{{ related_product.price }}
                                 {% endif %}
                             </h6>
-                            <a href="{% url 'detail' slug=related_product.slug_url %}" class="btn btn-link">View Details</a>
+                            <a href="{% url 'detail' slug=related_product.slug_url %}" class="btn btn-link text-decoration-none text-primary">View Details</a>
                         </div>
                     </div>
                 </div>

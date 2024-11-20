@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container mt-5">
-    <h2 class="text-center mb-4">Payment Options</h2>
+<div class="container mt-5 mb-5">
+    <h2 class="text-center mb-5">Payment Options</h2>
 
     <form method="post" id="paymentForm">
         {% csrf_token %}
@@ -11,7 +11,7 @@
         <!-- Payment Methods -->
         <div class="row mb-4">
             <div class="col-md-4">
-                <div class="card border-primary">
+                <div class="card border-primary payment-option-card">
                     <div class="card-body text-center">
                         <img src="https://powercorridors.in/wp-content/uploads/2024/06/gpay-1-1000x570.png" alt="UPI" class="img-fluid mb-3" style="width: 80px;">
                         <h5 class="card-title">UPI (Google Pay)</h5>
@@ -23,7 +23,7 @@
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card border-primary">
+                <div class="card border-primary payment-option-card">
                     <div class="card-body text-center">
                         <img src="https://www.startupinsider.in/wp-content/uploads/2023/06/Rupay.png" alt="Card Payment" class="img-fluid mb-3" style="width: 80px;">
                         <h5 class="card-title">Credit/Debit Card</h5>
@@ -35,7 +35,7 @@
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card border-primary">
+                <div class="card border-primary payment-option-card">
                     <div class="card-body text-center">
                         <img src="https://static.vecteezy.com/system/resources/previews/035/026/415/non_2x/cash-on-delivery-or-cod-icon-design-for-shipping-coupon-bonus-logo-seal-tag-sign-seal-symbol-badge-stamp-sticker-template-website-apps-illustration-free-vector.jpg" alt="Cash on Delivery" class="img-fluid mb-3" style="width: 80px;">
                         <h5 class="card-title">Cash on Delivery</h5>
@@ -48,7 +48,7 @@
             </div>
         </div>
 
-        <button type="submit" class="btn btn-primary">Proceed with Payment</button>
+        <button type="submit" class="btn btn-primary w-100">Proceed with Payment</button>
     </form>
 </div>
 
@@ -104,4 +104,52 @@
         }
     }
 </script>
+
+{% endblock %}
+
+{% block styles %}
+<style>
+    /* Centering payment options with spacing */
+    .payment-option-card {
+        transition: transform 0.3s ease-in-out;
+    }
+
+    .payment-option-card:hover {
+        transform: scale(1.05);  /* Slight zoom effect on hover */
+    }
+
+    .payment-option-card img {
+        transition: transform 0.3s ease;
+    }
+
+    .payment-option-card:hover img {
+        transform: scale(1.1);  /* Zoom in on image on hover */
+    }
+
+    .modal-content {
+        border-radius: 10px;
+    }
+
+    .modal-body {
+        padding: 2rem;
+    }
+
+    .btn-primary, .btn-success, .btn-danger {
+        width: 100%;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+    }
+
+    .icon-circle {
+        border-radius: 50%;
+        padding: 20px;
+    }
+</style>
 {% endblock %}

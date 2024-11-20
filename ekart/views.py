@@ -12,7 +12,7 @@ from django.utils import timezone
 from .models import Product
 from django.http import Http404
 from django.core.paginator import Paginator
-from .models import CartItem, Product,Cart,EndUser,Order,OrderItem,Payment
+from .models import CartItem, Product,Cart,EndUser,Order,OrderItem,Payment,Category
 from admin_panel.models import Slide
 import re
 from django.db.models import Q
@@ -72,54 +72,44 @@ def Sign_up(request):
 
     return render(request, 'signup.html', {'form': form})
 
-
-
 def index(request):
-    query = request.GET.get('search')
-    
-    # Search across multiple fields if a query is provided
+    query = request.GET.get('search', '').strip()
+    category_id = request.GET.get('category', '').strip()
+    all_items = Product.objects.all()
     if query:
-        all_items = Product.objects.filter(
+        all_items = all_items.filter(
             Q(title__icontains=query) |
             Q(description__icontains=query) |
             Q(category__name__icontains=query) |
             Q(price__icontains=query)
         )
-        if not all_items.exists():  # Check if no results found
-            messages.info(request, "Sorry, no products found matching your search.")
-            all_items = Product.objects.all()  # Show all products as fallback
-    else:
+    if category_id:
+        all_items = all_items.filter(category_id=category_id)
+    if not all_items.exists():
+        messages.info(request, "Sorry, no products found matching your search or category.")
         all_items = Product.objects.all()
-
-    # Retrieve and clean the username from email
     user_email = request.session.get('muser_email', None)
     cleaned_username = None
     if user_email:
-        username_part = user_email.split('@')[0]
+        username_part = user_email.split('@')[0] if '@' in user_email else user_email
         cleaned_username = re.sub(r'[^a-zA-Z]', '', username_part)
         request.session['username'] = cleaned_username
-
-        # Save cleaned username to EndUser model if it exists
         try:
             user = EndUser.objects.get(email=user_email)
             user.username = cleaned_username
             user.save()
         except EndUser.DoesNotExist:
             EndUser.objects.create(email=user_email, username=cleaned_username)
-
-    # Pagination
     paginator = Paginator(all_items, 6)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-
-    # Retrieve slide images from Slide model
-    slides = Slide.objects.all().order_by('order')  # Get slides ordered by the `order` field
-
+    slides = Slide.objects.all().order_by('order')
+    categories = Category.objects.all()  
     return render(request, 'home.html', {
         'page_obj': page_obj,
-        'query': query,
+        'slides': slides,
         'cleaned_username': cleaned_username,
-        'slides': slides  # Pass slides to the template
+        'categories': categories,  
     })
 
 def detail(request, slug):
@@ -407,7 +397,9 @@ def order_confirmation(request, order_id):
 
     username_part = user_email.split('@')[0]
     username = re.sub(r'[^a-zA-Z]', '', username_part)
-    estimated_delivery_date = order.order_date + timedelta(days=7)
+    if not order.estimated_delivery_date:
+        order.estimated_delivery_date = (order.order_date + timedelta(days=7)).date()
+        order.save()
 
     # Subtract stock for each product in the order
     with transaction.atomic():  # Ensure atomicity to prevent partial updates
@@ -428,7 +420,7 @@ def order_confirmation(request, order_id):
             f"Hello {username},\n\n"
             f"Thank you for your order! Your order ID is {order.order_id}.\n"
             f"The total price is ₹{order.total_price}.\n"
-            f"Your order is expected to be delivered by {estimated_delivery_date.strftime('%Y-%m-%d')}.\n\n"
+            f"Your order is expected to be delivered by {order.estimated_delivery_date.strftime('%Y-%m-%d')}.\n\n"
             "Thank you for shopping with us!"
         ),
         from_email="your_email@gmail.com",
@@ -441,49 +433,62 @@ def order_confirmation(request, order_id):
         'total_price': order.total_price,
         'cart_items': order.items.all(),
         'cleaned_username': username,
-        'estimated_delivery_date': estimated_delivery_date,
+        'estimated_delivery_date': order.estimated_delivery_date,
     })
+from datetime import timedelta
 
 def order_details(request):
+    # Get user email from the session
     user_email = request.session.get("muser_email")
-
     if not user_email:
         messages.error(request, "You need to be logged in to view your order details.")
         return redirect('login')
     
     try:
+        # Fetch the user associated with the email
         user = EndUser.objects.get(email=user_email)
     except EndUser.DoesNotExist:
         messages.error(request, "User not found.")
         return redirect('login')
     
+    # Fetch orders for the user
     orders = Order.objects.filter(user=user)
     orders_data = []
+    
+    # Prepare order details
     for order in orders:
+        # Define stages for the order progress
         stages = ["Pending", "Processing", "Shipped", "Delivered"]
         current_stage_index = stages.index(order.status) if order.status in stages else 0
         progress_percentage = (current_stage_index + 1) / len(stages) * 100
 
+        # Collect order items and their details
         order_items = []
         for item in order.items.all():
             subtotal = item.quantity * item.price
             order_items.append({
                 'item': item,
                 'subtotal': subtotal,
-                'product_image': item.product.image.url if item.product.image else None  # Add product image URL
+                'product_image': item.product.image.url if item.product.image else None,  # Handle product image
             })
 
+        # Append order data to the list
         orders_data.append({
             'order': order,
             'order_items': order_items,
-            'progress_percentage': progress_percentage
+            'progress_percentage': progress_percentage,
+            'estimated_delivery_date': order.estimated_delivery_date,  # Use the field from the database
         })
-        username=request.session.get("username")
+    
+    # Retrieve the username from the session
+    username = request.session.get("username")
 
+    # Render the order details page
     return render(request, 'order_details.html', {
         'orders_data': orders_data,
         'cleaned_username': username,
     })
+
 def payment_page(request):
     order_id = request.session.get('order_id')
     if not order_id:

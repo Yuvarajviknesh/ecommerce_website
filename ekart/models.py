@@ -86,6 +86,7 @@ class Order(models.Model):
     city = models.CharField(max_length=100, blank=True)
     state = models.CharField(max_length=100, blank=True)
     order_id = models.CharField(max_length=100, unique=True, editable=False)
+    estimated_delivery_date = models.DateField(null=True)
 
     def __str__(self):
         return f"Order #{self.order_id} by {self.user.email} on {self.order_date.strftime('%Y-%m-%d')} (Total: {self.total_price})"
