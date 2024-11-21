@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 import uuid
 
-# Create Category model
+
 class Category(models.Model):
     name = models.CharField(max_length=150)
 
@@ -12,13 +12,12 @@ class Category(models.Model):
         return self.name
 
 
-# Create Product model
 class Product(models.Model):
     title = models.CharField(max_length=100)
     image = models.ImageField(upload_to='Product/')
     description = models.TextField()
     price = models.IntegerField()
-    offer_price = models.IntegerField(null=True, blank=True)  # Add offer_price
+    offer_price = models.IntegerField(null=True, blank=True)  
     date_time = models.DateTimeField(auto_now_add=True)
     slug_url = models.SlugField(unique=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, default=1)
@@ -80,7 +79,7 @@ class Order(models.Model):
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Pending')
     contact_number = models.CharField(max_length=15, blank=True)
-    alternate_contact_number = models.CharField(max_length=15, blank=True)  # Added field
+    alternate_contact_number = models.CharField(max_length=15, blank=True)  
     pincode = models.CharField(max_length=10, blank=True)
     street_address = models.CharField(max_length=255, blank=True)
     city = models.CharField(max_length=100, blank=True)
